@@ -5,6 +5,7 @@ import { WorkspaceDocument, WorkspaceDocumentSchema } from './document.schema';
 import { DocumentService } from './document.service';
 import { DocumentController } from './document.controller';
 import { AccessModule } from '../access/access.module';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AccessModule } from '../access/access.module';
       },
     }),
     AccessModule,
+    ActivityModule,
   ],
   controllers: [DocumentController],
   providers: [DocumentService],

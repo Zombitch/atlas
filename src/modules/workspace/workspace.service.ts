@@ -7,6 +7,7 @@ import {
   WorkspaceDocument,
 } from '../document/document.schema';
 import { ShareSecret } from '../share/share-secret.schema';
+import { ActivityLog } from '../activity/activity.schema';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -20,6 +21,7 @@ export class WorkspaceService {
     @InjectModel(WorkspaceDocument.name)
     private documentModel: Model<WorkspaceDocument>,
     @InjectModel(ShareSecret.name) private shareModel: Model<ShareSecret>,
+    @InjectModel(ActivityLog.name) private activityModel: Model<ActivityLog>,
   ) {
     this.uploadDir = process.env.UPLOAD_DIR || './uploads';
   }
@@ -70,20 +72,20 @@ export class WorkspaceService {
         }
       }
 
-      const [documentsResult, sharesResult, workspaceResult] = await Promise.all(
-        [
+      const [documentsResult, sharesResult, activityResult, workspaceResult] =
+        await Promise.all([
           this.documentModel.deleteMany({ workspaceId: workspaceObjectId }).exec(),
           this.shareModel.deleteMany({ workspaceId: workspaceObjectId }).exec(),
+          this.activityModel.deleteMany({ workspaceId: workspaceObjectId }).exec(),
           this.workspaceModel.findByIdAndDelete(id).exec(),
-        ],
-      );
+        ]);
 
       if (!workspaceResult) {
         return false;
       }
 
       this.logger.log(
-        `Workspace deleted: ${id} (${documentsResult.deletedCount || 0} docs, ${sharesResult.deletedCount || 0} shares)`,
+        `Workspace deleted: ${id} (${documentsResult.deletedCount || 0} docs, ${sharesResult.deletedCount || 0} shares, ${activityResult.deletedCount || 0} activity logs)`,
       );
       return true;
     } catch {

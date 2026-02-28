@@ -5,6 +5,9 @@
     <h1><%= workspace.name %></h1>
     <div class="workspace-actions">
       <% if (isOwner) { %>
+        <a href="/workspace/<%= workspace._id %>/activity?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline">
+          Voir l'activité
+        </a>
         <a href="/shares?workspaceId=<%= workspace._id %>&secret=<%= encodeURIComponent(secret) %>" class="btn btn-secondary">
           Gérer les partages
         </a>

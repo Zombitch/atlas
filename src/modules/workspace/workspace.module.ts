@@ -8,6 +8,7 @@ import {
   WorkspaceDocumentSchema,
 } from '../document/document.schema';
 import { ShareSecret, ShareSecretSchema } from '../share/share-secret.schema';
+import { ActivityLog, ActivityLogSchema } from '../activity/activity.schema';
 import { AccessModule } from '../access/access.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { AccessModule } from '../access/access.module';
       { name: Workspace.name, schema: WorkspaceSchema },
       { name: WorkspaceDocument.name, schema: WorkspaceDocumentSchema },
       { name: ShareSecret.name, schema: ShareSecretSchema },
+      { name: ActivityLog.name, schema: ActivityLogSchema },
     ]),
     AccessModule,
   ],

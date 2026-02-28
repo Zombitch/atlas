@@ -7,6 +7,7 @@ import { DocumentModule } from './modules/document/document.module';
 import { ShareModule } from './modules/share/share.module';
 import { AccessModule } from './modules/access/access.module';
 import { ViewsModule } from './modules/views/views.module';
+import { ActivityModule } from './modules/activity/activity.module';
 
 const env = process.env.NODE_ENV || 'development';
 const collectionPrefix = env === 'production' ? 'atlas_prod' : 'atlas_dev';
@@ -31,6 +32,7 @@ const collectionPrefix = env === 'production' ? 'atlas_prod' : 'atlas_dev';
     DocumentModule,
     ShareModule,
     AccessModule,
+    ActivityModule,
     ViewsModule,
   ],
   providers: [

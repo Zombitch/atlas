@@ -4,6 +4,7 @@ import { WorkspaceService } from './workspace.service';
 import { Workspace } from './workspace.schema';
 import { WorkspaceDocument } from '../document/document.schema';
 import { ShareSecret } from '../share/share-secret.schema';
+import { ActivityLog } from '../activity/activity.schema';
 
 const mockWorkspaceModel = {
   create: jest.fn(),
@@ -17,6 +18,10 @@ const mockDocumentModel = {
 };
 
 const mockShareModel = {
+  deleteMany: jest.fn(),
+};
+
+const mockActivityModel = {
   deleteMany: jest.fn(),
 };
 
@@ -38,6 +43,10 @@ describe('WorkspaceService', () => {
         {
           provide: getModelToken(ShareSecret.name),
           useValue: mockShareModel,
+        },
+        {
+          provide: getModelToken(ActivityLog.name),
+          useValue: mockActivityModel,
         },
       ],
     }).compile();
@@ -121,6 +130,9 @@ describe('WorkspaceService', () => {
       mockWorkspaceModel.findByIdAndDelete.mockReturnValue({
         exec: jest.fn().mockResolvedValue({ _id: 'ws-id' }),
       });
+      mockActivityModel.deleteMany.mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ deletedCount: 3 }),
+      });
 
       const result = await service.deleteWorkspace('507f1f77bcf86cd799439011');
 
@@ -132,6 +144,9 @@ describe('WorkspaceService', () => {
         workspaceId: expect.anything(),
       });
       expect(mockShareModel.deleteMany).toHaveBeenCalledWith({
+        workspaceId: expect.anything(),
+      });
+      expect(mockActivityModel.deleteMany).toHaveBeenCalledWith({
         workspaceId: expect.anything(),
       });
       expect(mockWorkspaceModel.findByIdAndDelete).toHaveBeenCalledWith(

@@ -1,10 +1,20 @@
-import { Controller, Get, Param, Query, Res, HttpStatus } from '@nestjs/common';
-import { Response } from 'express';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Res,
+  HttpStatus,
+  Req,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
 import { DocumentService } from '../document/document.service';
 import { WorkspaceService } from '../workspace/workspace.service';
 import { AccessService } from '../access/access.service';
 import { getFileCategory } from '../../common/utils/file-validation.util';
 import * as fs from 'fs';
+import { ActivityActorType, ActivityType } from '../activity/activity.schema';
+import { ActivityService } from '../activity/activity.service';
 
 @Controller()
 export class ViewsController {
@@ -12,6 +22,7 @@ export class ViewsController {
     private readonly documentService: DocumentService,
     private readonly workspaceService: WorkspaceService,
     private readonly accessService: AccessService,
+    private readonly activityService: ActivityService,
   ) {}
 
   @Get()
@@ -24,6 +35,7 @@ export class ViewsController {
     @Param('id') id: string,
     @Query('secret') secret: string,
     @Query('path') currentPathQuery: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
     if (!secret) {
@@ -56,6 +68,13 @@ export class ViewsController {
         });
       }
     }
+
+    const actorType = isOwner ? ActivityActorType.OWNER : ActivityActorType.SHARE;
+    await this.activityService.logWorkspaceAccess(
+      id,
+      actorType,
+      this.activityService.resolveRequestMeta(req),
+    );
 
     const documents = await this.documentService.findByWorkspace(id);
     const docsWithCategory = documents.map((doc) => {
@@ -128,6 +147,7 @@ export class ViewsController {
   async viewDocument(
     @Param('id') id: string,
     @Query('secret') secret: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
     if (!secret) {
@@ -174,6 +194,16 @@ export class ViewsController {
       secret,
       workspaceId,
     );
+    const actorType = isOwner ? ActivityActorType.OWNER : ActivityActorType.SHARE;
+
+    await this.activityService.logFileView(
+      workspaceId,
+      doc._id.toString(),
+      doc.originalName,
+      actorType,
+      this.activityService.resolveRequestMeta(req),
+    );
+
     const documentsInScope = isOwner
       ? await this.documentService.findByWorkspace(workspaceId)
       : [];
@@ -258,6 +288,66 @@ export class ViewsController {
       workspaceId,
       workspace,
       secret,
+    });
+  }
+
+  @Get('workspace/:id/activity')
+  async workspaceActivity(
+    @Param('id') id: string,
+    @Query('secret') secret: string,
+    @Res() res: Response,
+  ) {
+    if (!secret) {
+      return res.render('access-denied', {
+        title: 'Accès refusé',
+        message: 'Secret propriétaire requis.',
+      });
+    }
+
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, id);
+    if (!isOwner) {
+      return res.render('access-denied', {
+        title: 'Accès refusé',
+        message: 'Accès refusé. Secret propriétaire requis.',
+      });
+    }
+
+    const workspace = await this.workspaceService.findById(id);
+    if (!workspace) {
+      return res.render('access-denied', {
+        title: 'Accès refusé',
+        message: 'Espace introuvable.',
+      });
+    }
+
+    const logs = await this.activityService.listByWorkspace(id, 1000);
+    const formattedLogs = logs.map((log) => {
+      const label =
+        log.activityType === ActivityType.WORKSPACE_ACCESS
+          ? "Accès à l'espace"
+          : log.activityType === ActivityType.FILE_VIEW
+            ? 'Fichier consulté'
+            : 'Fichier téléchargé';
+
+      return {
+        id: log._id.toString(),
+        activityType: log.activityType,
+        activityLabel: label,
+        actorType: log.actorType,
+        actorLabel: log.actorType === ActivityActorType.OWNER ? 'Propriétaire' : 'Partage',
+        documentName: log.documentName || '-',
+        documentId: log.documentId ? log.documentId.toString() : '-',
+        ip: log.ip,
+        userAgent: log.userAgent,
+        createdAt: log.createdAt,
+      };
+    });
+
+    return res.render('workspace-activity', {
+      title: `Atlas — Activité ${workspace.name}`,
+      workspace,
+      secret,
+      logs: formattedLogs,
     });
   }
 

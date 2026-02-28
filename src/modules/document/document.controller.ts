@@ -19,12 +19,15 @@ import * as fs from 'fs';
 import { DocumentService } from './document.service';
 import { AccessService } from '../access/access.service';
 import { getFileCategory } from '../../common/utils/file-validation.util';
+import { ActivityActorType } from '../activity/activity.schema';
+import { ActivityService } from '../activity/activity.service';
 
 @Controller('api')
 export class DocumentController {
   constructor(
     private readonly documentService: DocumentService,
     private readonly accessService: AccessService,
+    private readonly activityService: ActivityService,
   ) {}
 
   @Post('upload')
@@ -215,6 +218,20 @@ export class DocumentController {
 
     const category = getFileCategory(doc.mimeType);
     const disposition = category === 'binary' ? 'attachment' : 'inline';
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(
+      secret,
+      doc.workspaceId.toString(),
+    );
+    const actorType = isOwner ? ActivityActorType.OWNER : ActivityActorType.SHARE;
+    const meta = this.activityService.resolveRequestMeta(req);
+
+    await this.activityService.logFileDownload(
+      doc.workspaceId.toString(),
+      doc._id.toString(),
+      doc.originalName,
+      actorType,
+      meta,
+    );
 
     res.setHeader('Content-Type', doc.mimeType);
     res.setHeader(

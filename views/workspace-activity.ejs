@@ -1,0 +1,58 @@
+<%- include('partials/header') %>
+
+<div class="workspace-activity-container">
+  <div class="workspace-header">
+    <h1>Journal d'activité</h1>
+    <div class="workspace-actions">
+      <a href="/workspace/<%= workspace._id %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline">
+        Retour à l'espace
+      </a>
+    </div>
+  </div>
+
+  <p class="text-muted">
+    Espace: <strong><%= workspace.name %></strong> (<%= logs.length %> événement<%= logs.length > 1 ? 's' : '' %>)
+  </p>
+
+  <% if (!logs.length) { %>
+    <p class="text-muted">Aucune activité enregistrée pour le moment.</p>
+  <% } else { %>
+    <div class="activity-table-wrapper">
+      <table class="activity-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Action</th>
+            <th>Acteur</th>
+            <th>Fichier</th>
+            <th>IP</th>
+            <th>User-Agent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% logs.forEach(function(log) { %>
+            <tr>
+              <td><%= new Date(log.createdAt).toLocaleString('fr-FR') %></td>
+              <td><%= log.activityLabel %></td>
+              <td><%= log.actorLabel %></td>
+              <td>
+                <% if (log.documentName !== '-') { %>
+                  <span title="<%= log.documentName %>"><%= log.documentName %></span>
+                <% } else { %>
+                  <span class="text-muted">-</span>
+                <% } %>
+              </td>
+              <td><code><%= log.ip %></code></td>
+              <td class="activity-user-agent">
+                <span title="<%= log.userAgent %>"><%= log.userAgent %></span>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>
+

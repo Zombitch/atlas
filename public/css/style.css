@@ -1022,6 +1022,10 @@ body {
 .hidden { display: none !important; }
 .text-muted { color: var(--text-muted); font-size: 0.82rem; }
 
+.mt-10 {
+  margin-top: 10px;
+}
+
 /* === Share workspace === */
 .share-workspace-section {
   margin-top: 28px;

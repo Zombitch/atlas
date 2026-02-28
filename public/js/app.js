@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSharesPage();
   initSecretToggle();
   initPasteButton();
+  initDocumentSwipeNavigation();
 });
 
 function initHomeTabs() {
@@ -581,6 +582,55 @@ function copyToClipboard(text, feedbackId) {
       setTimeout(() => { feedback.textContent = ''; }, 3000);
     }
   });
+}
+
+// === Document swipe navigation (mobile/touch) ===
+function initDocumentSwipeNavigation() {
+  const container = document.getElementById('document-view-container');
+  if (!container) return;
+
+  const previousLink = container.querySelector('a[data-nav="previous"]');
+  const nextLink = container.querySelector('a[data-nav="next"]');
+
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+
+  container.addEventListener('touchstart', (e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, { passive: true });
+
+  container.addEventListener('touchend', (e) => {
+    if (!tracking || !e.changedTouches || e.changedTouches.length !== 1) return;
+    tracking = false;
+
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    const minHorizontalDistance = 60;
+    const horizontalDominanceRatio = 1.2;
+    const isHorizontalSwipe =
+      absX >= minHorizontalDistance &&
+      absX > absY * horizontalDominanceRatio;
+
+    if (!isHorizontalSwipe) return;
+
+    if (deltaX < 0 && nextLink) {
+      window.location.href = nextLink.href;
+      return;
+    }
+
+    if (deltaX > 0 && previousLink) {
+      window.location.href = previousLink.href;
+    }
+  }, { passive: true });
 }
 
 function getShareValueToDisplay(scopeType, scopeId, shareSecret) {

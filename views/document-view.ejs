@@ -1,11 +1,11 @@
 <%- include('partials/header') %>
 
-<div class="document-view-container">
+<div class="document-view-container" id="document-view-container">
   <div class="doc-view-header">
     <h1><%= document.originalName %></h1>
     <div class="doc-view-actions">
       <% if (previousDocument) { %>
-        <a href="/doc/<%= previousDocument.id %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline" title="<%= previousDocument.name %>">
+        <a href="/doc/<%= previousDocument.id %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline" data-nav="previous" title="<%= previousDocument.name %>">
           &larr; Précédent
         </a>
       <% } else { %>
@@ -15,7 +15,7 @@
       <% } %>
 
       <% if (nextDocument) { %>
-        <a href="/doc/<%= nextDocument.id %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline" title="<%= nextDocument.name %>">
+        <a href="/doc/<%= nextDocument.id %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline" data-nav="next" title="<%= nextDocument.name %>">
           Suivant &rarr;
         </a>
       <% } else { %>

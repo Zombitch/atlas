@@ -23,6 +23,7 @@ export class ViewsController {
   async workspace(
     @Param('id') id: string,
     @Query('secret') secret: string,
+    @Query('path') currentPathQuery: string,
     @Res() res: Response,
   ) {
     if (!secret) {
@@ -57,15 +58,67 @@ export class ViewsController {
     }
 
     const documents = await this.documentService.findByWorkspace(id);
-    const docsWithCategory = documents.map((doc) => ({
-      ...doc.toObject(),
-      category: getFileCategory(doc.mimeType),
-    }));
+    const docsWithCategory = documents.map((doc) => {
+      const originalName = this.normalizePath(doc.originalName);
+      return {
+        ...doc.toObject(),
+        originalName,
+        category: getFileCategory(doc.mimeType),
+      };
+    });
+    const currentPath = this.normalizePath(currentPathQuery);
+    const currentSegments = this.pathSegments(currentPath);
+    const folderMap = new Map<string, { name: string; path: string }>();
+    const filesInCurrentFolder: Array<Record<string, unknown>> = [];
+
+    for (const doc of docsWithCategory) {
+      const originalName = String(doc.originalName);
+      const allSegments = this.pathSegments(originalName);
+      if (!allSegments.length) {
+        continue;
+      }
+
+      const filename = allSegments[allSegments.length - 1];
+      const folderSegments = allSegments.slice(0, -1);
+      const prefixMatches = currentSegments.every(
+        (segment, index) => folderSegments[index] === segment,
+      );
+
+      if (!prefixMatches) {
+        continue;
+      }
+
+      if (folderSegments.length === currentSegments.length) {
+        filesInCurrentFolder.push({
+          ...doc,
+          displayName: filename,
+        });
+        continue;
+      }
+
+      const childName = folderSegments[currentSegments.length];
+      const childPath = [...currentSegments, childName].join('/');
+      if (!folderMap.has(childPath)) {
+        folderMap.set(childPath, { name: childName, path: childPath });
+      }
+    }
+
+    const folders = Array.from(folderMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name, 'fr'),
+    );
+    filesInCurrentFolder.sort((a, b) =>
+      String(a.displayName).localeCompare(String(b.displayName), 'fr'),
+    );
+    const breadcrumbs = this.buildBreadcrumbs(currentPath);
 
     return res.render('workspace', {
       title: `Atlas — ${workspace.name}`,
       workspace,
-      documents: docsWithCategory,
+      documents: filesInCurrentFolder,
+      totalDocuments: docsWithCategory.length,
+      folders,
+      breadcrumbs,
+      currentPath,
       isOwner,
       secret,
     });
@@ -206,5 +259,36 @@ export class ViewsController {
       workspace,
       secret,
     });
+  }
+
+  private normalizePath(value: string | undefined): string {
+    if (!value) {
+      return '';
+    }
+
+    return value
+      .replace(/\\/g, '/')
+      .split('/')
+      .filter((segment) => segment && segment !== '.' && segment !== '..')
+      .join('/')
+      .slice(0, 1024);
+  }
+
+  private pathSegments(pathValue: string): string[] {
+    return pathValue.split('/').filter(Boolean);
+  }
+
+  private buildBreadcrumbs(pathValue: string): Array<{ name: string; path: string }> {
+    const segments = this.pathSegments(pathValue);
+    const breadcrumbs: Array<{ name: string; path: string }> = [];
+
+    for (let i = 0; i < segments.length; i += 1) {
+      breadcrumbs.push({
+        name: segments[i],
+        path: segments.slice(0, i + 1).join('/'),
+      });
+    }
+
+    return breadcrumbs;
   }
 }

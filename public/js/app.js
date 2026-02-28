@@ -141,6 +141,7 @@ function initUpload() {
 
   const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
+  const folderInput = document.getElementById('folder-input');
 
   // Drag & drop
   if (dropZone) {
@@ -158,7 +159,7 @@ function initUpload() {
       dropZone.classList.remove('dragover');
       const files = e.dataTransfer.files;
       if (files.length > 0) {
-        uploadFile(files[0], form);
+        uploadFiles(Array.from(files), form);
       }
     });
   }
@@ -166,18 +167,30 @@ function initUpload() {
   if (fileInput) {
     fileInput.addEventListener('change', () => {
       if (fileInput.files.length > 0) {
-        uploadFile(fileInput.files[0], form);
+        uploadFiles(Array.from(fileInput.files), form);
+      }
+    });
+  }
+
+  if (folderInput) {
+    folderInput.addEventListener('change', () => {
+      if (folderInput.files.length > 0) {
+        uploadFiles(Array.from(folderInput.files), form);
       }
     });
   }
 }
 
-function uploadFile(file, form) {
+function uploadFiles(files, form) {
   const formData = new FormData();
   const workspaceId = form.querySelector('[name="workspaceId"]').value;
   const secret = form.querySelector('[name="secret"]').value;
 
-  formData.append('file', file);
+  files.forEach((file) => {
+    const relativePath = file.webkitRelativePath || file.name;
+    formData.append('files', file);
+    formData.append('relativePaths', relativePath);
+  });
   formData.append('workspaceId', workspaceId);
   formData.append('secret', secret);
 
@@ -186,6 +199,7 @@ function uploadFile(file, form) {
   const progressText = document.getElementById('progress-text');
 
   progressSection.classList.remove('hidden');
+  progressText.textContent = `0% (${files.length} fichier${files.length > 1 ? 's' : ''})`;
 
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/upload');
@@ -194,7 +208,7 @@ function uploadFile(file, form) {
     if (e.lengthComputable) {
       const pct = Math.round((e.loaded / e.total) * 100);
       progressFill.style.width = pct + '%';
-      progressText.textContent = pct + '%';
+      progressText.textContent = `${pct}% (${files.length} fichier${files.length > 1 ? 's' : ''})`;
     }
   });
 

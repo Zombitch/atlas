@@ -21,9 +21,11 @@
       <input type="hidden" name="secret" value="<%= secret %>">
       <div class="upload-area" id="drop-zone">
         <span class="upload-icon">&#128228;</span>
-        <p>Glissez vos fichiers ici ou</p>
-        <label for="file-input" class="btn btn-primary">Sélectionner un fichier</label>
-        <input type="file" id="file-input" name="file" class="hidden-input">
+        <p>Glissez vos fichiers ici, sélectionnez des fichiers ou un dossier</p>
+        <label for="file-input" class="btn btn-primary">Sélectionner des fichiers</label>
+        <input type="file" id="file-input" name="files" class="hidden-input" multiple>
+        <label for="folder-input" class="btn btn-secondary">Sélectionner un dossier</label>
+        <input type="file" id="folder-input" name="files" class="hidden-input" webkitdirectory directory multiple>
       </div>
       <div id="upload-progress" class="hidden">
         <div class="progress-bar">
@@ -36,10 +38,36 @@
   <% } %>
 
   <div class="documents-section">
-    <h2>Documents (<%= documents.length %>)</h2>
-    <% if (documents.length === 0) { %>
-      <p class="text-muted">Aucun document dans cet espace.</p>
+    <h2>Explorateur (<%= totalDocuments %> fichier<%= totalDocuments > 1 ? 's' : '' %>)</h2>
+
+    <div class="folder-nav">
+      <a href="/workspace/<%= workspace._id %>?secret=<%= encodeURIComponent(secret) %>" class="folder-crumb <%= currentPath ? '' : 'active' %>">Racine</a>
+      <% breadcrumbs.forEach(function(crumb) { %>
+        <span class="folder-separator">/</span>
+        <a
+          href="/workspace/<%= workspace._id %>?secret=<%= encodeURIComponent(secret) %>&path=<%= encodeURIComponent(crumb.path) %>"
+          class="folder-crumb <%= currentPath === crumb.path ? 'active' : '' %>">
+          <%= crumb.name %>
+        </a>
+      <% }); %>
+    </div>
+
+    <% if (folders.length === 0 && documents.length === 0) { %>
+      <p class="text-muted">Aucun élément dans ce dossier.</p>
     <% } else { %>
+      <% if (folders.length > 0) { %>
+        <div class="folders-grid">
+          <% folders.forEach(function(folder) { %>
+            <a
+              class="folder-card"
+              href="/workspace/<%= workspace._id %>?secret=<%= encodeURIComponent(secret) %>&path=<%= encodeURIComponent(folder.path) %>">
+              <span class="folder-icon">&#128193;</span>
+              <span class="folder-name"><%= folder.name %></span>
+            </a>
+          <% }); %>
+        </div>
+      <% } %>
+
       <div class="documents-grid">
         <% documents.forEach(function(doc) { %>
           <div class="document-card" data-id="<%= doc._id %>">
@@ -55,7 +83,7 @@
               <% } %>
             </div>
             <div class="doc-info">
-              <span class="doc-name" title="<%= doc.originalName %>"><%= doc.originalName %></span>
+              <span class="doc-name" title="<%= doc.originalName %>"><%= doc.displayName || doc.originalName %></span>
               <span class="doc-meta"><%= (doc.size / 1024).toFixed(1) %> Ko &mdash; <%= new Date(doc.createdAt).toLocaleDateString('fr-FR') %></span>
             </div>
             <div class="doc-actions">

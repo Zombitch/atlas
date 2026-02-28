@@ -26,26 +26,44 @@ export class DocumentService {
     workspaceId: string,
     file: Express.Multer.File,
   ): Promise<WorkspaceDocument> {
-    const sanitizedName = sanitizeFilename(file.originalname);
-    const ext = path.extname(sanitizedName);
-    const storageName = `${uuidv4()}${ext}`;
+    const docs = await this.uploadMany(workspaceId, [file], [file.originalname]);
+    return docs[0];
+  }
 
-    // Move file to upload directory
-    const destPath = path.join(this.uploadDir, storageName);
-    fs.writeFileSync(destPath, file.buffer);
+  async uploadMany(
+    workspaceId: string,
+    files: Express.Multer.File[],
+    relativePaths: string[] = [],
+  ): Promise<WorkspaceDocument[]> {
+    const workspaceObjectId = new Types.ObjectId(workspaceId);
+    const createdDocs: WorkspaceDocument[] = [];
 
-    const doc = await this.documentModel.create({
-      workspaceId: new Types.ObjectId(workspaceId),
-      originalName: sanitizedName,
-      storageName,
-      mimeType: file.mimetype,
-      size: file.size,
-    });
+    for (let i = 0; i < files.length; i += 1) {
+      const file = files[i];
+      const relativePath = relativePaths[i];
+      const sanitizedName = this.sanitizeRelativePath(
+        relativePath,
+        file.originalname,
+      );
+      const ext = path.extname(sanitizedName);
+      const storageName = `${uuidv4()}${ext}`;
+      const destPath = path.join(this.uploadDir, storageName);
+      fs.writeFileSync(destPath, file.buffer);
+
+      const doc = await this.documentModel.create({
+        workspaceId: workspaceObjectId,
+        originalName: sanitizedName,
+        storageName,
+        mimeType: file.mimetype,
+        size: file.size,
+      });
+      createdDocs.push(doc);
+    }
 
     this.logger.log(
-      `Document uploaded: ${doc._id} to workspace ${workspaceId}`,
+      `${createdDocs.length} document(s) uploaded to workspace ${workspaceId}`,
     );
-    return doc;
+    return createdDocs;
   }
 
   async findByWorkspace(workspaceId: string): Promise<WorkspaceDocument[]> {
@@ -103,5 +121,26 @@ export class DocumentService {
 
   getFilePath(storageName: string): string {
     return path.join(this.uploadDir, storageName);
+  }
+
+  private sanitizeRelativePath(
+    relativePath: string | undefined,
+    fallbackName: string,
+  ): string {
+    const safeFallback = sanitizeFilename(path.basename(fallbackName)) || 'file';
+    if (!relativePath) {
+      return safeFallback;
+    }
+
+    const normalized = relativePath
+      .replace(/\\/g, '/')
+      .split('/')
+      .filter((segment) => segment && segment !== '.' && segment !== '..')
+      .map((segment) => sanitizeFilename(segment))
+      .filter((segment) => segment.length > 0)
+      .join('/')
+      .slice(0, 1024);
+
+    return normalized || safeFallback;
   }
 }

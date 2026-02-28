@@ -11,9 +11,9 @@ import {
   Res,
   HttpStatus,
   UseInterceptors,
-  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { Request, Response } from 'express';
 import * as fs from 'fs';
 import { DocumentService } from './document.service';
@@ -29,19 +29,20 @@ export class DocumentController {
 
   @Post('upload')
   @UseInterceptors(
-    FileInterceptor('file', {
+    FilesInterceptor('files', undefined, {
       limits: {
         fileSize: parseInt(process.env.MAX_FILE_SIZE || '52428800', 10),
       },
     }),
   )
   async upload(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @Body('workspaceId') workspaceId: string,
     @Body('secret') secret: string,
+    @Body('relativePaths') relativePathsRaw: string | string[] | undefined,
     @Res() res: Response,
   ) {
-    if (!file) {
+    if (!files || files.length === 0) {
       return res
         .status(HttpStatus.BAD_REQUEST)
         .json({ error: 'Aucun fichier fourni.' });
@@ -59,13 +60,26 @@ export class DocumentController {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 
-    const doc = await this.documentService.upload(workspaceId, file);
+    const relativePaths = this.normalizeRelativePaths(relativePathsRaw);
+    const docs = await this.documentService.uploadMany(
+      workspaceId,
+      files,
+      relativePaths,
+    );
+
     return res.status(HttpStatus.CREATED).json({
-      id: doc._id,
-      originalName: doc.originalName,
-      mimeType: doc.mimeType,
-      size: doc.size,
+      count: docs.length,
     });
+  }
+
+  private normalizeRelativePaths(
+    rawValue: string | string[] | undefined,
+  ): string[] {
+    if (!rawValue) {
+      return [];
+    }
+
+    return Array.isArray(rawValue) ? rawValue : [rawValue];
   }
 
   @Get('documents/:workspaceId')

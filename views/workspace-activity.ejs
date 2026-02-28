@@ -24,6 +24,7 @@
             <th>Date</th>
             <th>Action</th>
             <th>Acteur</th>
+            <th>Label secret</th>
             <th>Fichier</th>
             <th>IP</th>
             <th>User-Agent</th>
@@ -35,6 +36,7 @@
               <td><%= new Date(log.createdAt).toLocaleString('fr-FR') %></td>
               <td><%= log.activityLabel %></td>
               <td><%= log.actorLabel %></td>
+              <td><%= log.shareLabel %></td>
               <td>
                 <% if (log.documentName !== '-') { %>
                   <span title="<%= log.documentName %>"><%= log.documentName %></span>
@@ -55,4 +57,3 @@
 </div>
 
 <%- include('partials/footer') %>
-

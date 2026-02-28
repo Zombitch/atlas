@@ -29,6 +29,9 @@ export class ActivityLog extends MongooseDocument {
   @Prop({ required: true, enum: Object.values(ActivityActorType) })
   actorType: ActivityActorType;
 
+  @Prop({ type: String, required: false, trim: true, maxlength: 120, default: null })
+  shareLabel?: string | null;
+
   @Prop({ required: true, trim: true, maxlength: 120 })
   ip: string;
 
@@ -39,4 +42,3 @@ export class ActivityLog extends MongooseDocument {
 }
 
 export const ActivityLogSchema = SchemaFactory.createForClass(ActivityLog);
-

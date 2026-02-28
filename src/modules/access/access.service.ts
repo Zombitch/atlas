@@ -10,6 +10,8 @@ export interface AccessContext {
   workspaceId: string;
   scopeType?: 'WORKSPACE' | 'DOCUMENT';
   scopeId?: string;
+  shareId?: string;
+  shareLabel?: string;
 }
 
 @Injectable()
@@ -53,6 +55,8 @@ export class AccessService {
           workspaceId: share.workspaceId.toString(),
           scopeType: share.scopeType,
           scopeId: share.scopeId.toString(),
+          shareId: share._id.toString(),
+          shareLabel: share.label || undefined,
         };
       }
     }

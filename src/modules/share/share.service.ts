@@ -16,12 +16,18 @@ export class ShareService {
     workspaceId: string,
     scopeType: ScopeType,
     scopeId: string,
+    label?: string,
   ): Promise<{ share: ShareSecret; secret: string }> {
     const secret = generateSecret();
     const secretHash = await hashSecret(secret);
+    const normalizedLabel =
+      typeof label === 'string' && label.trim()
+        ? label.trim().slice(0, 120)
+        : null;
 
     const share = await this.shareModel.create({
       secretHash,
+      label: normalizedLabel,
       scopeType,
       scopeId: new Types.ObjectId(scopeId),
       workspaceId: new Types.ObjectId(workspaceId),
@@ -75,6 +81,7 @@ export class ShareService {
 
       const newShare = await this.shareModel.create({
         secretHash,
+        label: oldShare.label || null,
         scopeType: oldShare.scopeType,
         scopeId: oldShare.scopeId,
         workspaceId: oldShare.workspaceId,

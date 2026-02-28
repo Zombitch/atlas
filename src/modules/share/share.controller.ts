@@ -30,6 +30,7 @@ export class ShareController {
     @Body('workspaceId') workspaceId: string,
     @Body('scopeType') scopeType: string,
     @Body('scopeId') scopeId: string,
+    @Body('label') label: string,
     @Res() res: Response,
   ) {
     if (!secret || !workspaceId || !scopeType || !scopeId) {
@@ -75,11 +76,13 @@ export class ShareController {
       workspaceId,
       scopeType as ScopeType,
       scopeId,
+      label,
     );
 
     return res.status(HttpStatus.CREATED).json({
       shareId: share._id,
       secret: shareSecret,
+      label: share.label || null,
       scopeType: share.scopeType,
       scopeId: share.scopeId,
       message: 'Secret de partage créé. Copiez-le maintenant.',

@@ -11,6 +11,9 @@ export class ShareSecret extends Document {
   @Prop({ required: true, index: true })
   secretHash: string;
 
+  @Prop({ type: String, required: false, trim: true, maxlength: 120, default: null })
+  label?: string | null;
+
   @Prop({ required: true, enum: ScopeType })
   scopeType: ScopeType;
 

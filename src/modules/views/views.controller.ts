@@ -53,10 +53,8 @@ export class ViewsController {
       });
     }
 
-    const isOwner = await this.accessService.verifyOwnerForWorkspace(
-      secret,
-      id,
-    );
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, id);
+    let shareLabel: string | undefined;
 
     // If not owner, check if share secret gives workspace access
     if (!isOwner) {
@@ -67,6 +65,7 @@ export class ViewsController {
           message: 'Accès refusé.',
         });
       }
+      shareLabel = context.shareLabel;
     }
 
     const actorType = isOwner ? ActivityActorType.OWNER : ActivityActorType.SHARE;
@@ -74,6 +73,7 @@ export class ViewsController {
       id,
       actorType,
       this.activityService.resolveRequestMeta(req),
+      shareLabel,
     );
 
     const documents = await this.documentService.findByWorkspace(id);
@@ -190,10 +190,11 @@ export class ViewsController {
     }
 
     const workspaceId = doc.workspaceId.toString();
-    const isOwner = await this.accessService.verifyOwnerForWorkspace(
-      secret,
-      workspaceId,
-    );
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, workspaceId);
+    let shareContext: Awaited<ReturnType<AccessService['verifyAccess']>> = null;
+    if (!isOwner) {
+      shareContext = await this.accessService.verifyAccess(secret);
+    }
     const actorType = isOwner ? ActivityActorType.OWNER : ActivityActorType.SHARE;
 
     await this.activityService.logFileView(
@@ -202,6 +203,7 @@ export class ViewsController {
       doc.originalName,
       actorType,
       this.activityService.resolveRequestMeta(req),
+      shareContext?.shareLabel,
     );
 
     const documentsInScope = isOwner
@@ -209,13 +211,12 @@ export class ViewsController {
       : [];
 
     if (!isOwner) {
-      const context = await this.accessService.verifyAccess(secret);
       const hasWorkspaceShareAccess =
-        context &&
-        context.type === 'share' &&
-        context.workspaceId === workspaceId &&
-        context.scopeType === 'WORKSPACE' &&
-        context.scopeId === workspaceId;
+        shareContext &&
+        shareContext.type === 'share' &&
+        shareContext.workspaceId === workspaceId &&
+        shareContext.scopeType === 'WORKSPACE' &&
+        shareContext.scopeId === workspaceId;
 
       if (hasWorkspaceShareAccess) {
         documentsInScope.push(
@@ -334,7 +335,13 @@ export class ViewsController {
         activityType: log.activityType,
         activityLabel: label,
         actorType: log.actorType,
-        actorLabel: log.actorType === ActivityActorType.OWNER ? 'Propriétaire' : 'Partage',
+        actorLabel:
+          log.actorType === ActivityActorType.OWNER
+            ? 'Propriétaire'
+            : log.shareLabel
+              ? `Partage (${log.shareLabel})`
+              : 'Partage',
+        shareLabel: log.shareLabel || '-',
         documentName: log.documentName || '-',
         documentId: log.documentId ? log.documentId.toString() : '-',
         ip: log.ip,

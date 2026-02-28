@@ -241,6 +241,18 @@ export class DocumentController {
     );
     const actorType = isOwner ? ActivityActorType.OWNER : ActivityActorType.SHARE;
     const meta = this.activityService.resolveRequestMeta(req);
+    let shareLabel: string | undefined;
+
+    if (!isOwner) {
+      const context = await this.accessService.verifyAccess(secret);
+      if (
+        context &&
+        context.type === 'share' &&
+        context.workspaceId === doc.workspaceId.toString()
+      ) {
+        shareLabel = context.shareLabel;
+      }
+    }
 
     await this.activityService.logFileDownload(
       doc.workspaceId.toString(),
@@ -248,6 +260,7 @@ export class DocumentController {
       doc.originalName,
       actorType,
       meta,
+      shareLabel,
     );
 
     res.setHeader('Content-Type', doc.mimeType);

@@ -25,11 +25,13 @@ export class ActivityService {
     workspaceId: string,
     actorType: ActivityActorType,
     meta: ActivityMeta,
+    shareLabel?: string,
   ): Promise<void> {
     await this.createLog({
       workspaceId,
       activityType: ActivityType.WORKSPACE_ACCESS,
       actorType,
+      shareLabel,
       ip: meta.ip,
       userAgent: meta.userAgent,
     });
@@ -41,6 +43,7 @@ export class ActivityService {
     documentName: string,
     actorType: ActivityActorType,
     meta: ActivityMeta,
+    shareLabel?: string,
   ): Promise<void> {
     await this.createLog({
       workspaceId,
@@ -48,6 +51,7 @@ export class ActivityService {
       documentId,
       documentName,
       actorType,
+      shareLabel,
       ip: meta.ip,
       userAgent: meta.userAgent,
     });
@@ -59,6 +63,7 @@ export class ActivityService {
     documentName: string,
     actorType: ActivityActorType,
     meta: ActivityMeta,
+    shareLabel?: string,
   ): Promise<void> {
     await this.createLog({
       workspaceId,
@@ -66,6 +71,7 @@ export class ActivityService {
       documentId,
       documentName,
       actorType,
+      shareLabel,
       ip: meta.ip,
       userAgent: meta.userAgent,
     });
@@ -110,6 +116,7 @@ export class ActivityService {
     workspaceId: string;
     activityType: ActivityType;
     actorType: ActivityActorType;
+    shareLabel?: string;
     ip: string;
     userAgent: string;
     documentId?: string;
@@ -120,6 +127,7 @@ export class ActivityService {
         workspaceId: Types.ObjectId;
         activityType: ActivityType;
         actorType: ActivityActorType;
+        shareLabel?: string | null;
         ip: string;
         userAgent: string;
         documentId?: Types.ObjectId;
@@ -138,6 +146,9 @@ export class ActivityService {
       if (params.documentName) {
         payload.documentName = params.documentName.slice(0, 1024);
       }
+      if (params.shareLabel && params.shareLabel.trim()) {
+        payload.shareLabel = params.shareLabel.trim().slice(0, 120);
+      }
 
       await this.activityModel.create(payload);
     } catch (error) {
@@ -149,4 +160,3 @@ export class ActivityService {
     }
   }
 }
-

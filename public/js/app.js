@@ -340,7 +340,15 @@ function initShareButtons() {
   // Share individual document
   document.querySelectorAll('.share-doc-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      createShare(btn.dataset.workspaceId, 'DOCUMENT', btn.dataset.documentId, btn.dataset.secret);
+      const label = promptShareLabel();
+      if (label === null) return;
+      createShare(
+        btn.dataset.workspaceId,
+        'DOCUMENT',
+        btn.dataset.documentId,
+        btn.dataset.secret,
+        label,
+      );
     });
   });
 
@@ -348,22 +356,31 @@ function initShareButtons() {
   const shareWorkspaceBtn = document.getElementById('share-workspace-btn');
   if (shareWorkspaceBtn) {
     shareWorkspaceBtn.addEventListener('click', () => {
+      const label = promptShareLabel();
+      if (label === null) return;
       createShare(
         shareWorkspaceBtn.dataset.workspaceId,
         'WORKSPACE',
         shareWorkspaceBtn.dataset.workspaceId,
         shareWorkspaceBtn.dataset.secret,
+        label,
       );
     });
   }
 }
 
-async function createShare(workspaceId, scopeType, scopeId, secret) {
+function promptShareLabel() {
+  const value = window.prompt('Label du secret (optionnel) :', '');
+  if (value === null) return null;
+  return value.trim().slice(0, 120);
+}
+
+async function createShare(workspaceId, scopeType, scopeId, secret, label = '') {
   try {
     const res = await fetch('/api/shares', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ workspaceId, scopeType, scopeId, secret }),
+      body: JSON.stringify({ workspaceId, scopeType, scopeId, secret, label }),
     });
 
     const data = await res.json();
@@ -429,6 +446,11 @@ async function loadShares(workspaceId, secret) {
         <div class="share-card ${isRevoked ? 'revoked' : ''}">
           <div class="share-info">
             <span class="share-scope">${scopeLabel}</span>
+            ${
+              share.label
+                ? `<span class="share-meta">Label: ${escapeHtml(share.label)}</span>`
+                : ''
+            }
             <span class="share-meta">Créé le ${date} &mdash; ID: ${share.scopeId}</span>
             <span class="share-status ${isRevoked ? 'revoked' : 'active'}">
               ${isRevoked ? 'Révoqué' : 'Actif'}
@@ -669,4 +691,13 @@ function updateRegenerateModalContent(scopeType) {
 
   title.textContent = 'Nouveau secret de partage';
   description.textContent = 'L\'ancien secret a été invalidé. Copiez le nouveau secret ci-dessous.';
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }

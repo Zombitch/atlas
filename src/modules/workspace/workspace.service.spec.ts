@@ -2,10 +2,22 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { WorkspaceService } from './workspace.service';
 import { Workspace } from './workspace.schema';
+import { WorkspaceDocument } from '../document/document.schema';
+import { ShareSecret } from '../share/share-secret.schema';
 
 const mockWorkspaceModel = {
   create: jest.fn(),
   findById: jest.fn(),
+  findByIdAndDelete: jest.fn(),
+};
+
+const mockDocumentModel = {
+  find: jest.fn(),
+  deleteMany: jest.fn(),
+};
+
+const mockShareModel = {
+  deleteMany: jest.fn(),
 };
 
 describe('WorkspaceService', () => {
@@ -18,6 +30,14 @@ describe('WorkspaceService', () => {
         {
           provide: getModelToken(Workspace.name),
           useValue: mockWorkspaceModel,
+        },
+        {
+          provide: getModelToken(WorkspaceDocument.name),
+          useValue: mockDocumentModel,
+        },
+        {
+          provide: getModelToken(ShareSecret.name),
+          useValue: mockShareModel,
         },
       ],
     }).compile();
@@ -84,6 +104,44 @@ describe('WorkspaceService', () => {
 
       const result = await service.findById('invalid');
       expect(result).toBeNull();
+    });
+  });
+
+  describe('deleteWorkspace', () => {
+    it('should delete workspace and related resources', async () => {
+      mockDocumentModel.find.mockReturnValue({
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      mockDocumentModel.deleteMany.mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ deletedCount: 2 }),
+      });
+      mockShareModel.deleteMany.mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ deletedCount: 1 }),
+      });
+      mockWorkspaceModel.findByIdAndDelete.mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ _id: 'ws-id' }),
+      });
+
+      const result = await service.deleteWorkspace('507f1f77bcf86cd799439011');
+
+      expect(result).toBe(true);
+      expect(mockDocumentModel.find).toHaveBeenCalledWith({
+        workspaceId: expect.anything(),
+      });
+      expect(mockDocumentModel.deleteMany).toHaveBeenCalledWith({
+        workspaceId: expect.anything(),
+      });
+      expect(mockShareModel.deleteMany).toHaveBeenCalledWith({
+        workspaceId: expect.anything(),
+      });
+      expect(mockWorkspaceModel.findByIdAndDelete).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+      );
+    });
+
+    it('should return false for invalid workspace id', async () => {
+      const result = await service.deleteWorkspace('invalid-id');
+      expect(result).toBe(false);
     });
   });
 });

@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initUpload();
   initDownloadButtons();
   initDeleteButtons();
+  initDeleteWorkspaceButton();
   initShareButtons();
   initSharesPage();
   initSecretToggle();
@@ -295,6 +296,41 @@ function initDeleteButtons() {
         alert('Erreur réseau.');
       }
     });
+  });
+}
+
+function initDeleteWorkspaceButton() {
+  const button = document.getElementById('delete-workspace-btn');
+  if (!button) return;
+
+  button.addEventListener('click', async () => {
+    if (
+      !confirm(
+        'Supprimer cet espace de travail et tous ses documents/partages ? Cette action est définitive.',
+      )
+    ) {
+      return;
+    }
+
+    const workspaceId = button.dataset.workspaceId;
+    const secret = button.dataset.secret;
+
+    try {
+      const res = await fetch(`/api/workspaces/${workspaceId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret }),
+      });
+
+      if (res.ok) {
+        window.location.href = '/';
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Erreur lors de la suppression.');
+      }
+    } catch {
+      alert('Erreur réseau.');
+    }
   });
 }
 

@@ -8,6 +8,11 @@
         <a href="/shares?workspaceId=<%= workspace._id %>&secret=<%= encodeURIComponent(secret) %>" class="btn btn-secondary">
           Gérer les partages
         </a>
+        <button class="btn btn-danger" id="delete-workspace-btn"
+          data-workspace-id="<%= workspace._id %>"
+          data-secret="<%= secret %>">
+          Supprimer l'espace
+        </button>
       <% } %>
       <a href="/" class="btn btn-outline">Retour</a>
     </div>

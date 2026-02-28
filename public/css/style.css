@@ -115,6 +115,13 @@ body {
 }
 .btn-outline:hover { background: var(--bg); }
 
+.btn.disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 .btn-block { width: 100%; }
 
 .btn-sm {
@@ -421,6 +428,7 @@ body {
 .doc-view-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .image-preview img {

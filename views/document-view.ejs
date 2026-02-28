@@ -4,6 +4,26 @@
   <div class="doc-view-header">
     <h1><%= document.originalName %></h1>
     <div class="doc-view-actions">
+      <% if (previousDocument) { %>
+        <a href="/doc/<%= previousDocument.id %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline" title="<%= previousDocument.name %>">
+          &larr; Précédent
+        </a>
+      <% } else { %>
+        <span class="btn btn-outline disabled" aria-disabled="true">
+          &larr; Précédent
+        </span>
+      <% } %>
+
+      <% if (nextDocument) { %>
+        <a href="/doc/<%= nextDocument.id %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline" title="<%= nextDocument.name %>">
+          Suivant &rarr;
+        </a>
+      <% } else { %>
+        <span class="btn btn-outline disabled" aria-disabled="true">
+          Suivant &rarr;
+        </span>
+      <% } %>
+
       <button class="btn btn-primary download-btn"
         data-document-id="<%= document._id %>"
         data-secret="<%= secret %>">

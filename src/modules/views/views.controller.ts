@@ -105,10 +105,54 @@ export class ViewsController {
     const category = getFileCategory(doc.mimeType);
     const filePath = this.documentService.getFilePath(doc.storageName);
     let textContent: string | null = null;
+    let previousDocument: { id: string; name: string } | null = null;
+    let nextDocument: { id: string; name: string } | null = null;
 
     if (category === 'text' && fs.existsSync(filePath)) {
       const buffer = fs.readFileSync(filePath);
       textContent = buffer.toString('utf-8').slice(0, 500000);
+    }
+
+    const workspaceId = doc.workspaceId.toString();
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, workspaceId);
+    const documentsInScope = isOwner
+      ? await this.documentService.findByWorkspace(workspaceId)
+      : [];
+
+    if (!isOwner) {
+      const context = await this.accessService.verifyAccess(secret);
+      const hasWorkspaceShareAccess =
+        context &&
+        context.type === 'share' &&
+        context.workspaceId === workspaceId &&
+        context.scopeType === 'WORKSPACE' &&
+        context.scopeId === workspaceId;
+
+      if (hasWorkspaceShareAccess) {
+        documentsInScope.push(...(await this.documentService.findByWorkspace(workspaceId)));
+      } else {
+        documentsInScope.push(doc);
+      }
+    }
+
+    const currentIndex = documentsInScope.findIndex(
+      (currentDoc) => currentDoc._id.toString() === id,
+    );
+
+    if (currentIndex > 0) {
+      const previous = documentsInScope[currentIndex - 1];
+      previousDocument = {
+        id: previous._id.toString(),
+        name: previous.originalName,
+      };
+    }
+
+    if (currentIndex >= 0 && currentIndex < documentsInScope.length - 1) {
+      const next = documentsInScope[currentIndex + 1];
+      nextDocument = {
+        id: next._id.toString(),
+        name: next.originalName,
+      };
     }
 
     return res.render('document-view', {
@@ -117,6 +161,8 @@ export class ViewsController {
       category,
       textContent,
       secret,
+      previousDocument,
+      nextDocument,
     });
   }
 

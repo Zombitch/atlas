@@ -4,6 +4,7 @@ import { ShareSecret, ShareSecretSchema } from './share-secret.schema';
 import { ShareService } from './share.service';
 import { ShareController } from './share.controller';
 import { AccessModule } from '../access/access.module';
+import { DocumentModule } from '../document/document.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { AccessModule } from '../access/access.module';
       { name: ShareSecret.name, schema: ShareSecretSchema },
     ]),
     AccessModule,
+    DocumentModule,
   ],
   controllers: [ShareController],
   providers: [ShareService],

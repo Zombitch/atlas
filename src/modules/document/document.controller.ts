@@ -18,7 +18,7 @@ import { Request, Response } from 'express';
 import * as fs from 'fs';
 import { DocumentService } from './document.service';
 import { AccessService } from '../access/access.service';
-import { getFileCategory } from '../../common/utils/file-validation.util';
+import { validateMimeAndExtension } from '../../common/utils/file-validation.util';
 import { ActivityActorType } from '../activity/activity.schema';
 import { ActivityService } from '../activity/activity.service';
 
@@ -35,6 +35,7 @@ export class DocumentController {
     FilesInterceptor('files', undefined, {
       limits: {
         fileSize: parseInt(process.env.MAX_FILE_SIZE || '52428800', 10),
+        files: parseInt(process.env.MAX_FILE_COUNT || '200', 10),
       },
     }),
   )
@@ -63,6 +64,14 @@ export class DocumentController {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 
+    for (const file of files) {
+      if (!validateMimeAndExtension(file.mimetype, file.originalname)) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          error: `Type de fichier non autorisé: ${file.originalname}`,
+        });
+      }
+    }
+
     const relativePaths = this.normalizeRelativePaths(relativePathsRaw);
     const docs = await this.documentService.uploadMany(
       workspaceId,
@@ -88,8 +97,20 @@ export class DocumentController {
   @Get('documents/:workspaceId')
   async listByWorkspace(
     @Param('workspaceId') workspaceId: string,
+    @Query('secret') secretQuery: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
+    const secret = this.extractSecret(req, secretQuery);
+    if (!secret) {
+      return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
+    }
+
+    const hasWorkspaceAccess = await this.hasWorkspaceAccess(secret, workspaceId);
+    if (!hasWorkspaceAccess) {
+      return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
+    }
+
     const documents = await this.documentService.findByWorkspace(workspaceId);
     return res.status(HttpStatus.OK).json(documents);
   }
@@ -185,12 +206,7 @@ export class DocumentController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const authHeader = req.get('authorization');
-    const bearerSecret =
-      authHeader && authHeader.toLowerCase().startsWith('bearer ')
-        ? authHeader.slice(7).trim()
-        : undefined;
-    const secret = secretQuery || req.get('x-atlas-secret') || bearerSecret;
+    const secret = this.extractSecret(req, secretQuery);
 
     if (!secret) {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
@@ -216,8 +232,9 @@ export class DocumentController {
         .json({ error: 'Fichier introuvable.' });
     }
 
-    const category = getFileCategory(doc.mimeType);
-    const disposition = category === 'binary' ? 'attachment' : 'inline';
+    const disposition = this.shouldServeInline(doc.mimeType)
+      ? 'inline'
+      : 'attachment';
     const isOwner = await this.accessService.verifyOwnerForWorkspace(
       secret,
       doc.workspaceId.toString(),
@@ -243,5 +260,55 @@ export class DocumentController {
 
     const stream = fs.createReadStream(filePath);
     stream.pipe(res);
+  }
+
+  private shouldServeInline(mimeType: string): boolean {
+    const normalized = (mimeType || '').toLowerCase();
+    const safeInlineMimeTypes = new Set([
+      'application/pdf',
+      'text/plain',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/bmp',
+      'image/tiff',
+    ]);
+
+    return safeInlineMimeTypes.has(normalized);
+  }
+
+  private extractSecret(req: Request, secretQuery?: string): string | undefined {
+    const authHeader = req.get('authorization');
+    const bearerSecret =
+      authHeader && authHeader.toLowerCase().startsWith('bearer ')
+        ? authHeader.slice(7).trim()
+        : undefined;
+
+    return secretQuery || req.get('x-atlas-secret') || bearerSecret || undefined;
+  }
+
+  private async hasWorkspaceAccess(
+    secret: string,
+    workspaceId: string,
+  ): Promise<boolean> {
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(
+      secret,
+      workspaceId,
+    );
+    if (isOwner) {
+      return true;
+    }
+
+    const context = await this.accessService.verifyAccess(secret);
+    if (!context || context.workspaceId !== workspaceId) {
+      return false;
+    }
+
+    if (context.type !== 'share') {
+      return false;
+    }
+
+    return context.scopeType === 'WORKSPACE' && context.scopeId === workspaceId;
   }
 }

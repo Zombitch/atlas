@@ -10,15 +10,18 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { Types } from 'mongoose';
 import { ShareService } from './share.service';
 import { AccessService } from '../access/access.service';
 import { ScopeType } from './share-secret.schema';
+import { DocumentService } from '../document/document.service';
 
 @Controller('api/shares')
 export class ShareController {
   constructor(
     private readonly shareService: ShareService,
     private readonly accessService: AccessService,
+    private readonly documentService: DocumentService,
   ) {}
 
   @Post()
@@ -45,6 +48,27 @@ export class ShareController {
       return res
         .status(HttpStatus.BAD_REQUEST)
         .json({ error: 'Type de scope invalide.' });
+    }
+
+    if (!Types.ObjectId.isValid(scopeId)) {
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ error: 'Identifiant de scope invalide.' });
+    }
+
+    if (scopeType === ScopeType.WORKSPACE && scopeId !== workspaceId) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        error: "Le scope WORKSPACE doit cibler l'espace courant.",
+      });
+    }
+
+    if (scopeType === ScopeType.DOCUMENT) {
+      const doc = await this.documentService.findById(scopeId);
+      if (!doc || doc.workspaceId.toString() !== workspaceId) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          error: 'Document introuvable pour cet espace.',
+        });
+      }
     }
 
     const { share, secret: shareSecret } = await this.shareService.createShare(

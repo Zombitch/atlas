@@ -1,11 +1,15 @@
 <%- include('partials/header') %>
 
 <div class="home-container">
-  <h1>Bienvenue sur Atlas</h1>
-  <p class="subtitle">Gérez et partagez vos documents en toute sécurité, sans compte.</p>
+  <div class="home-hero">
+    <div class="home-hero-icon">&#128193;</div>
+    <h1>Bienvenue sur Atlas</h1>
+    <p class="subtitle">Gérez et partagez vos documents en toute sécurité, sans compte.</p>
+  </div>
 
   <div class="home-actions">
     <div class="action-card">
+      <div class="action-card-icon create">&#10010;</div>
       <h2>Créer un espace</h2>
       <p>Créez un nouvel espace de travail pour organiser vos documents.</p>
       <form id="create-workspace-form">
@@ -23,6 +27,7 @@
     </div>
 
     <div class="action-card">
+      <div class="action-card-icon access">&#128272;</div>
       <h2>Entrer un secret</h2>
       <p>Accédez à un espace ou un document avec votre secret.</p>
       <form id="access-form">

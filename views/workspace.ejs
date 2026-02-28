@@ -1,0 +1,119 @@
+<%- include('partials/header') %>
+
+<div class="workspace-container">
+  <div class="workspace-header">
+    <h1><%= workspace.name %></h1>
+    <div class="workspace-actions">
+      <% if (isOwner) { %>
+        <a href="/shares?workspaceId=<%= workspace._id %>&secret=<%= encodeURIComponent(secret) %>" class="btn btn-secondary">
+          Gérer les partages
+        </a>
+      <% } %>
+      <a href="/" class="btn btn-outline">Retour</a>
+    </div>
+  </div>
+
+  <% if (isOwner) { %>
+  <div class="upload-section">
+    <h2>Ajouter un document</h2>
+    <form id="upload-form" enctype="multipart/form-data">
+      <input type="hidden" name="workspaceId" value="<%= workspace._id %>">
+      <input type="hidden" name="secret" value="<%= secret %>">
+      <div class="upload-area" id="drop-zone">
+        <p>Glissez vos fichiers ici ou</p>
+        <label for="file-input" class="btn btn-primary">Sélectionner un fichier</label>
+        <input type="file" id="file-input" name="file" class="hidden-input">
+      </div>
+      <div id="upload-progress" class="hidden">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <span id="progress-text">0%</span>
+      </div>
+    </form>
+  </div>
+  <% } %>
+
+  <div class="documents-section">
+    <h2>Documents (<%= documents.length %>)</h2>
+    <% if (documents.length === 0) { %>
+      <p class="text-muted">Aucun document dans cet espace.</p>
+    <% } else { %>
+      <div class="documents-grid">
+        <% documents.forEach(function(doc) { %>
+          <div class="document-card" data-id="<%= doc._id %>">
+            <div class="doc-icon">
+              <% if (doc.category === 'image') { %>
+                <span class="icon">&#128247;</span>
+              <% } else if (doc.category === 'pdf') { %>
+                <span class="icon">&#128196;</span>
+              <% } else if (doc.category === 'text') { %>
+                <span class="icon">&#128221;</span>
+              <% } else { %>
+                <span class="icon">&#128193;</span>
+              <% } %>
+            </div>
+            <div class="doc-info">
+              <span class="doc-name" title="<%= doc.originalName %>"><%= doc.originalName %></span>
+              <span class="doc-meta"><%= (doc.size / 1024).toFixed(1) %> Ko &mdash; <%= new Date(doc.createdAt).toLocaleDateString('fr-FR') %></span>
+            </div>
+            <div class="doc-actions">
+              <a href="/doc/<%= doc._id %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-sm btn-outline" title="Visualiser">
+                Voir
+              </a>
+              <button class="btn btn-sm btn-primary download-btn"
+                data-document-id="<%= doc._id %>"
+                data-secret="<%= secret %>"
+                title="Télécharger">
+                &#8595;
+              </button>
+              <% if (isOwner) { %>
+                <button class="btn btn-sm btn-secondary share-doc-btn"
+                  data-document-id="<%= doc._id %>"
+                  data-workspace-id="<%= workspace._id %>"
+                  data-secret="<%= secret %>"
+                  title="Partager">
+                  &#128279;
+                </button>
+                <button class="btn btn-sm btn-danger delete-btn"
+                  data-document-id="<%= doc._id %>"
+                  data-secret="<%= secret %>"
+                  title="Supprimer">
+                  &#10005;
+                </button>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+
+  <% if (isOwner) { %>
+  <div class="share-workspace-section">
+    <button class="btn btn-secondary btn-block" id="share-workspace-btn"
+      data-workspace-id="<%= workspace._id %>"
+      data-secret="<%= secret %>">
+      Partager tout l'espace
+    </button>
+  </div>
+  <% } %>
+
+  <!-- Share modal -->
+  <div id="share-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Secret de partage</h2>
+      <div class="alert alert-info">
+        Copiez ce secret et transmettez-le à la personne concernée.
+      </div>
+      <div class="secret-display">
+        <code id="share-secret-display"></code>
+        <button type="button" class="btn btn-primary" id="copy-share-secret">Copier</button>
+      </div>
+      <p class="text-muted" id="share-copy-feedback"></p>
+      <button type="button" class="btn btn-secondary btn-block" id="close-share-modal">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

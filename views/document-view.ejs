@@ -4,13 +4,13 @@
   <div class="doc-view-header">
     <h1><%= document.originalName %></h1>
     <div class="doc-view-actions">
-      <button class="btn btn-primary download-btn"
+      <button class="btn btn-primary btn-sm download-btn"
         data-document-id="<%= document._id %>"
         data-secret="<%= secret %>">
-        Télécharger
+        &#8595; Telecharger
       </button>
-      <a href="/workspace/<%= document.workspaceId %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline">
-        Retour
+      <a href="/workspace/<%= document.workspaceId %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-ghost btn-sm">
+        &#8592; Retour
       </a>
     </div>
   </div>
@@ -30,7 +30,7 @@
             <button class="btn btn-primary download-btn"
               data-document-id="<%= document._id %>"
               data-secret="<%= secret %>">
-              Télécharger le PDF
+              Telecharger le PDF
             </button>
           </p>
         </object>
@@ -43,12 +43,12 @@
       <div class="binary-preview">
         <div class="binary-info">
           <span class="icon large">&#128193;</span>
-          <p>Ce format ne peut pas être prévisualisé.</p>
+          <p>Ce format ne peut pas etre previsualise.</p>
           <p class="text-muted"><%= document.mimeType %> &mdash; <%= (document.size / 1024).toFixed(1) %> Ko</p>
           <button class="btn btn-primary download-btn"
             data-document-id="<%= document._id %>"
             data-secret="<%= secret %>">
-            Télécharger
+            &#8595; Telecharger
           </button>
         </div>
       </div>

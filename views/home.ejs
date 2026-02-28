@@ -1,13 +1,17 @@
 <%- include('partials/header') %>
 
 <div class="home-container">
-  <h1>Bienvenue sur Atlas</h1>
-  <p class="subtitle">Gérez et partagez vos documents en toute sécurité, sans compte.</p>
+  <div class="home-hero">
+    <div class="home-hero-icon">&#128194;</div>
+    <h1>Bienvenue sur Atlas</h1>
+    <p class="subtitle">Gerez et partagez vos documents en toute securite, sans compte.</p>
+  </div>
 
   <div class="home-actions">
     <div class="action-card">
-      <h2>Créer un espace</h2>
-      <p>Créez un nouvel espace de travail pour organiser vos documents.</p>
+      <div class="action-card-icon">&#10010;</div>
+      <h2>Creer un espace</h2>
+      <p>Creez un nouvel espace de travail pour organiser vos documents.</p>
       <form id="create-workspace-form">
         <input
           type="text"
@@ -18,13 +22,14 @@
           class="input-field"
           maxlength="100"
         >
-        <button type="submit" class="btn btn-primary btn-block">Créer un espace</button>
+        <button type="submit" class="btn btn-primary btn-block">Creer un espace</button>
       </form>
     </div>
 
     <div class="action-card">
+      <div class="action-card-icon">&#128273;</div>
       <h2>Entrer un secret</h2>
-      <p>Accédez à un espace ou un document avec votre secret.</p>
+      <p>Accedez a un espace ou un document avec votre secret.</p>
       <form id="access-form">
         <div class="secret-input-group">
           <input
@@ -42,7 +47,7 @@
             &#128203;
           </button>
         </div>
-        <button type="submit" class="btn btn-secondary btn-block">Accéder</button>
+        <button type="submit" class="btn btn-secondary btn-block">Acceder</button>
       </form>
     </div>
   </div>
@@ -50,17 +55,18 @@
   <!-- Modal for owner secret display -->
   <div id="secret-modal" class="modal hidden">
     <div class="modal-content">
-      <h2>Espace créé avec succès</h2>
+      <h2>Espace cree avec succes</h2>
       <div class="alert alert-warning">
-        Copiez ce secret maintenant. Il ne pourra plus être affiché ensuite.
+        <span class="alert-icon">&#9888;</span>
+        <span>Copiez ce secret maintenant. Il ne pourra plus etre affiche ensuite.</span>
       </div>
       <div class="secret-display">
         <code id="owner-secret-display"></code>
-        <button type="button" class="btn btn-primary" id="copy-secret">Copier</button>
+        <button type="button" class="btn btn-primary btn-sm" id="copy-secret">Copier</button>
       </div>
       <p class="text-muted" id="copy-feedback"></p>
-      <button type="button" class="btn btn-secondary btn-block" id="close-modal">
-        J'ai copié mon secret, accéder à l'espace
+      <button type="button" class="btn btn-outline btn-block" id="close-modal">
+        J'ai copie mon secret, acceder a l'espace
       </button>
     </div>
   </div>

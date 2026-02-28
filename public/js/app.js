@@ -12,6 +12,32 @@ document.addEventListener('DOMContentLoaded', () => {
   initPasteButton();
 });
 
+// === Toast Notification System ===
+function showToast(message, type = 'info', duration = 4000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const icons = {
+    success: '\u2713',
+    error: '\u2717',
+    info: '\u2139',
+  };
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <span class="toast-icon">${icons[type] || icons.info}</span>
+    <span>${message}</span>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('toast-exit');
+    toast.addEventListener('animationend', () => toast.remove());
+  }, duration);
+}
+
 // === Create Workspace ===
 function initCreateWorkspace() {
   const form = document.getElementById('create-workspace-form');
@@ -23,6 +49,10 @@ function initCreateWorkspace() {
     const name = nameInput.value.trim();
     if (!name) return;
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.7';
+
     try {
       const res = await fetch('/api/workspaces', {
         method: 'POST',
@@ -32,7 +62,9 @@ function initCreateWorkspace() {
 
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || 'Erreur lors de la création.');
+        showToast(data.error || 'Erreur lors de la creation.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
         return;
       }
 
@@ -52,7 +84,9 @@ function initCreateWorkspace() {
         window.location.href = `/workspace/${data.workspaceId}?secret=${encodeURIComponent(data.ownerSecret)}`;
       };
     } catch (err) {
-      alert('Erreur réseau. Veuillez réessayer.');
+      showToast('Erreur reseau. Veuillez reessayer.', 'error');
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
     }
   });
 }
@@ -68,6 +102,10 @@ function initAccessForm() {
     const secret = secretInput.value.trim();
     if (!secret) return;
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.7';
+
     try {
       const res = await fetch('/api/access', {
         method: 'POST',
@@ -77,7 +115,9 @@ function initAccessForm() {
 
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || 'Accès refusé.');
+        showToast(data.error || 'Acces refuse.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
         return;
       }
 
@@ -89,7 +129,9 @@ function initAccessForm() {
         window.location.href = `/doc/${data.scopeId}?secret=${encodeURIComponent(secret)}`;
       }
     } catch (err) {
-      alert('Erreur réseau. Veuillez réessayer.');
+      showToast('Erreur reseau. Veuillez reessayer.', 'error');
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
     }
   });
 }
@@ -160,20 +202,21 @@ function uploadFile(file, form) {
 
   xhr.addEventListener('load', () => {
     if (xhr.status === 201) {
-      window.location.reload();
+      showToast('Document ajoute avec succes.', 'success');
+      setTimeout(() => window.location.reload(), 800);
     } else {
       try {
         const data = JSON.parse(xhr.responseText);
-        alert(data.error || 'Erreur lors de l\'upload.');
+        showToast(data.error || "Erreur lors de l'upload.", 'error');
       } catch {
-        alert('Erreur lors de l\'upload.');
+        showToast("Erreur lors de l'upload.", 'error');
       }
       progressSection.classList.add('hidden');
     }
   });
 
   xhr.addEventListener('error', () => {
-    alert('Erreur réseau lors de l\'upload.');
+    showToast("Erreur reseau lors de l'upload.", 'error');
     progressSection.classList.add('hidden');
   });
 
@@ -196,7 +239,7 @@ function initDownloadButtons() {
 
         const data = await res.json();
         if (!res.ok) {
-          alert(data.error || 'Accès refusé.');
+          showToast(data.error || 'Acces refuse.', 'error');
           return;
         }
 
@@ -207,8 +250,10 @@ function initDownloadButtons() {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+
+        showToast('Telechargement lance.', 'success', 2000);
       } catch (err) {
-        alert('Erreur réseau.');
+        showToast('Erreur reseau.', 'error');
       }
     });
   });
@@ -232,13 +277,19 @@ function initDeleteButtons() {
 
         if (res.ok) {
           const card = btn.closest('.document-card');
-          if (card) card.remove();
+          if (card) {
+            card.style.transition = 'all 0.3s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95)';
+            setTimeout(() => card.remove(), 300);
+          }
+          showToast('Document supprime.', 'success');
         } else {
           const data = await res.json();
-          alert(data.error || 'Erreur lors de la suppression.');
+          showToast(data.error || 'Erreur lors de la suppression.', 'error');
         }
       } catch (err) {
-        alert('Erreur réseau.');
+        showToast('Erreur reseau.', 'error');
       }
     });
   });
@@ -277,7 +328,7 @@ async function createShare(workspaceId, scopeType, scopeId, secret) {
 
     const data = await res.json();
     if (!res.ok) {
-      alert(data.error || 'Erreur.');
+      showToast(data.error || 'Erreur.', 'error');
       return;
     }
 
@@ -295,7 +346,7 @@ async function createShare(workspaceId, scopeType, scopeId, secret) {
       modal.classList.add('hidden');
     };
   } catch (err) {
-    alert('Erreur réseau.');
+    showToast('Erreur reseau.', 'error');
   }
 }
 
@@ -318,12 +369,12 @@ async function loadShares(workspaceId, secret) {
     const shares = await res.json();
 
     if (!res.ok) {
-      sharesList.innerHTML = '<p class="alert alert-error">Erreur de chargement.</p>';
+      sharesList.innerHTML = '<div class="alert alert-error"><span class="alert-icon">\u2717</span><span>Erreur de chargement.</span></div>';
       return;
     }
 
     if (shares.length === 0) {
-      sharesList.innerHTML = '<p class="text-muted">Aucun secret de partage créé.</p>';
+      sharesList.innerHTML = '<div class="empty-state"><span class="empty-state-icon">&#128279;</span><p>Aucun secret de partage cree.</p></div>';
       return;
     }
 
@@ -331,29 +382,33 @@ async function loadShares(workspaceId, secret) {
       const isRevoked = !!share.revokedAt;
       const date = new Date(share.createdAt).toLocaleDateString('fr-FR');
       const scopeLabel = share.scopeType === 'WORKSPACE' ? 'Espace entier' : 'Document';
+      const scopeIcon = share.scopeType === 'WORKSPACE' ? '&#128194;' : '&#128196;';
 
       return `
         <div class="share-card ${isRevoked ? 'revoked' : ''}">
           <div class="share-info">
-            <span class="share-scope">${scopeLabel}</span>
-            <span class="share-meta">Créé le ${date} &mdash; ID: ${share.scopeId}</span>
+            <span class="share-scope">
+              <span class="share-scope-badge">${scopeIcon} ${scopeLabel}</span>
+            </span>
+            <span class="share-meta">Cree le ${date} &mdash; ID: ${share.scopeId}</span>
             <span class="share-status ${isRevoked ? 'revoked' : 'active'}">
-              ${isRevoked ? 'Révoqué' : 'Actif'}
+              <span class="share-status-dot"></span>
+              ${isRevoked ? 'Revoque' : 'Actif'}
             </span>
           </div>
           ${!isRevoked ? `
             <div class="share-actions">
-              <button class="btn btn-sm btn-secondary regenerate-share-btn"
+              <button class="btn btn-sm btn-outline regenerate-share-btn"
                 data-share-id="${share._id}"
                 data-workspace-id="${workspaceId}"
                 data-secret="${secret}">
-                Régénérer
+                &#8635; Regenerer
               </button>
               <button class="btn btn-sm btn-danger revoke-share-btn"
                 data-share-id="${share._id}"
                 data-workspace-id="${workspaceId}"
                 data-secret="${secret}">
-                Révoquer
+                &#10005; Revoquer
               </button>
             </div>
           ` : ''}
@@ -370,7 +425,7 @@ async function loadShares(workspaceId, secret) {
       btn.addEventListener('click', () => revokeShare(btn));
     });
   } catch (err) {
-    sharesList.innerHTML = '<p class="alert alert-error">Erreur réseau.</p>';
+    sharesList.innerHTML = '<div class="alert alert-error"><span class="alert-icon">\u2717</span><span>Erreur reseau.</span></div>';
   }
 }
 
@@ -388,7 +443,7 @@ async function regenerateShare(btn) {
 
     const data = await res.json();
     if (!res.ok) {
-      alert(data.error || 'Erreur.');
+      showToast(data.error || 'Erreur.', 'error');
       return;
     }
 
@@ -406,12 +461,12 @@ async function regenerateShare(btn) {
       loadShares(workspaceId, secret);
     };
   } catch (err) {
-    alert('Erreur réseau.');
+    showToast('Erreur reseau.', 'error');
   }
 }
 
 async function revokeShare(btn) {
-  if (!confirm('Révoquer ce secret de partage ?')) return;
+  if (!confirm('Revoquer ce secret de partage ?')) return;
 
   const shareId = btn.dataset.shareId;
   const workspaceId = btn.dataset.workspaceId;
@@ -425,13 +480,14 @@ async function revokeShare(btn) {
     });
 
     if (res.ok) {
+      showToast('Secret revoque avec succes.', 'success');
       loadShares(workspaceId, secret);
     } else {
       const data = await res.json();
-      alert(data.error || 'Erreur.');
+      showToast(data.error || 'Erreur.', 'error');
     }
   } catch (err) {
-    alert('Erreur réseau.');
+    showToast('Erreur reseau.', 'error');
   }
 }
 
@@ -455,6 +511,7 @@ function initPasteButton() {
     try {
       const text = await navigator.clipboard.readText();
       document.getElementById('access-secret').value = text;
+      showToast('Secret colle.', 'success', 2000);
     } catch {
       // Clipboard API may not be available
     }
@@ -466,9 +523,10 @@ function copyToClipboard(text, feedbackId) {
   navigator.clipboard.writeText(text).then(() => {
     const feedback = document.getElementById(feedbackId);
     if (feedback) {
-      feedback.textContent = 'Copié !';
+      feedback.textContent = 'Copie !';
       setTimeout(() => { feedback.textContent = ''; }, 3000);
     }
+    showToast('Copie dans le presse-papiers.', 'success', 2000);
   }).catch(() => {
     // Fallback
     const textarea = document.createElement('textarea');
@@ -479,8 +537,9 @@ function copyToClipboard(text, feedbackId) {
     document.body.removeChild(textarea);
     const feedback = document.getElementById(feedbackId);
     if (feedback) {
-      feedback.textContent = 'Copié !';
+      feedback.textContent = 'Copie !';
       setTimeout(() => { feedback.textContent = ''; }, 3000);
     }
+    showToast('Copie dans le presse-papiers.', 'success', 2000);
   });
 }

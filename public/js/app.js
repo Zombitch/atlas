@@ -1,6 +1,7 @@
 // === Atlas Frontend ===
 
 document.addEventListener('DOMContentLoaded', () => {
+  initHomeTabs();
   initCreateWorkspace();
   initAccessForm();
   initUpload();
@@ -11,6 +12,45 @@ document.addEventListener('DOMContentLoaded', () => {
   initSecretToggle();
   initPasteButton();
 });
+
+function initHomeTabs() {
+  const tabsRoot = document.querySelector('[data-home-tabs]');
+  if (!tabsRoot) return;
+
+  const tabs = Array.from(tabsRoot.querySelectorAll('.home-tab'));
+  const panels = Array.from(tabsRoot.querySelectorAll('.home-panel'));
+  if (!tabs.length || !panels.length) return;
+
+  function activateTab(nextTab) {
+    const targetId = nextTab.dataset.tabTarget;
+    if (!targetId) return;
+
+    tabs.forEach((tab) => {
+      const isActive = tab === nextTab;
+      tab.classList.toggle('is-active', isActive);
+      tab.setAttribute('aria-selected', String(isActive));
+      tab.setAttribute('tabindex', isActive ? '0' : '-1');
+    });
+
+    panels.forEach((panel) => {
+      const isActive = panel.id === targetId;
+      panel.classList.toggle('is-active', isActive);
+      panel.hidden = !isActive;
+    });
+  }
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => activateTab(tab));
+    tab.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const direction = e.key === 'ArrowRight' ? 1 : -1;
+      const nextIndex = (index + direction + tabs.length) % tabs.length;
+      tabs[nextIndex].focus();
+      activateTab(tabs[nextIndex]);
+    });
+  });
+}
 
 // === Create Workspace ===
 function initCreateWorkspace() {

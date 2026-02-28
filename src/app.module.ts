@@ -13,11 +13,14 @@ const collectionPrefix = env === 'production' ? 'atlas_prod' : 'atlas_dev';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/atlas_dev', {
-      connectionFactory: (connection) => {
-        return connection;
+    MongooseModule.forRoot(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/atlas_dev',
+      {
+        connectionFactory: (connection) => {
+          return connection;
+        },
       },
-    }),
+    ),
     ThrottlerModule.forRoot([
       {
         ttl: parseInt(process.env.RATE_LIMIT_TTL || '60000', 10),

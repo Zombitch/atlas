@@ -7,10 +7,39 @@
     <p class="subtitle">Gérez et partagez vos documents en toute sécurité, sans compte.</p>
   </div>
 
-  <div class="home-actions">
-    <div class="action-card">
-      <div class="action-card-icon create">&#10010;</div>
-      <h2>Créer un espace</h2>
+  <div class="home-actions" data-home-tabs>
+    <div class="home-tabs" role="tablist" aria-label="Actions d'accueil">
+      <button
+        type="button"
+        class="home-tab is-active"
+        id="home-tab-create"
+        role="tab"
+        aria-selected="true"
+        aria-controls="home-panel-create"
+        data-tab-target="home-panel-create"
+        tabindex="0"
+      >
+        Créer un espace
+      </button>
+      <button
+        type="button"
+        class="home-tab"
+        id="home-tab-access"
+        role="tab"
+        aria-selected="false"
+        aria-controls="home-panel-access"
+        data-tab-target="home-panel-access"
+        tabindex="-1"
+      >
+        Entrer un secret
+      </button>
+    </div>
+
+    <div class="action-card home-panel is-active" id="home-panel-create" role="tabpanel" aria-labelledby="home-tab-create">
+      <div class="action-card-head">
+        <div class="action-card-icon create">&#10010;</div>
+        <h2>Créer un espace</h2>
+      </div>
       <p>Créez un nouvel espace de travail pour organiser vos documents.</p>
       <form id="create-workspace-form">
         <input
@@ -26,9 +55,11 @@
       </form>
     </div>
 
-    <div class="action-card">
-      <div class="action-card-icon access">&#128272;</div>
-      <h2>Entrer un secret</h2>
+    <div class="action-card home-panel" id="home-panel-access" role="tabpanel" aria-labelledby="home-tab-access" hidden>
+      <div class="action-card-head">
+        <div class="action-card-icon access">&#128272;</div>
+        <h2>Entrer un secret</h2>
+      </div>
       <p>Accédez à un espace ou un document avec votre secret.</p>
       <form id="access-form">
         <div class="secret-input-group">

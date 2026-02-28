@@ -45,7 +45,9 @@ export class AccessService {
     for (const share of shares) {
       const isValid = await verifySecret(secret, share.secretHash);
       if (isValid) {
-        this.logger.log(`Share access granted for ${share.scopeType} ${share.scopeId}`);
+        this.logger.log(
+          `Share access granted for ${share.scopeType} ${share.scopeId}`,
+        );
         return {
           type: 'share',
           workspaceId: share.workspaceId.toString(),
@@ -59,7 +61,10 @@ export class AccessService {
     return null;
   }
 
-  async verifyOwnerForWorkspace(secret: string, workspaceId: string): Promise<boolean> {
+  async verifyOwnerForWorkspace(
+    secret: string,
+    workspaceId: string,
+  ): Promise<boolean> {
     try {
       const workspace = await this.workspaceModel.findById(workspaceId).exec();
       if (!workspace) return false;
@@ -69,7 +74,11 @@ export class AccessService {
     }
   }
 
-  async verifyAccessForDocument(secret: string, documentId: string, workspaceId: string): Promise<boolean> {
+  async verifyAccessForDocument(
+    secret: string,
+    documentId: string,
+    workspaceId: string,
+  ): Promise<boolean> {
     if (!secret || typeof secret !== 'string') return false;
 
     // Check owner access

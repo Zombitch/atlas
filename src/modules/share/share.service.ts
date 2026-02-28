@@ -57,13 +57,17 @@ export class ShareService {
     }
   }
 
-  async regenerate(shareId: string): Promise<{ share: ShareSecret; secret: string } | null> {
+  async regenerate(
+    shareId: string,
+  ): Promise<{ share: ShareSecret; secret: string } | null> {
     try {
       const oldShare = await this.shareModel.findById(shareId).exec();
       if (!oldShare) return null;
 
       // Revoke old share
-      await this.shareModel.findByIdAndUpdate(shareId, { revokedAt: new Date() }).exec();
+      await this.shareModel
+        .findByIdAndUpdate(shareId, { revokedAt: new Date() })
+        .exec();
 
       // Create new share with same scope
       const secret = generateSecret();

@@ -42,14 +42,19 @@ export class DocumentController {
     @Res() res: Response,
   ) {
     if (!file) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Aucun fichier fourni.' });
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ error: 'Aucun fichier fourni.' });
     }
 
     if (!workspaceId || !secret) {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 
-    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, workspaceId);
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(
+      secret,
+      workspaceId,
+    );
     if (!isOwner) {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
@@ -103,7 +108,9 @@ export class DocumentController {
     @Res() res: Response,
   ) {
     if (!newName || !newName.trim()) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Nom invalide.' });
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ error: 'Nom invalide.' });
     }
 
     const doc = await this.documentService.findById(id);
@@ -187,14 +194,19 @@ export class DocumentController {
 
     const filePath = this.documentService.getFilePath(doc.storageName);
     if (!fs.existsSync(filePath)) {
-      return res.status(HttpStatus.NOT_FOUND).json({ error: 'Fichier introuvable.' });
+      return res
+        .status(HttpStatus.NOT_FOUND)
+        .json({ error: 'Fichier introuvable.' });
     }
 
     const category = getFileCategory(doc.mimeType);
     const disposition = category === 'binary' ? 'attachment' : 'inline';
 
     res.setHeader('Content-Type', doc.mimeType);
-    res.setHeader('Content-Disposition', `${disposition}; filename="${encodeURIComponent(doc.originalName)}"`);
+    res.setHeader(
+      'Content-Disposition',
+      `${disposition}; filename="${encodeURIComponent(doc.originalName)}"`,
+    );
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Length', doc.size);
 

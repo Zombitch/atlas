@@ -1,4 +1,8 @@
-import { isAllowedExtension, getFileCategory, validateMimeAndExtension } from './file-validation.util';
+import {
+  isAllowedExtension,
+  getFileCategory,
+  validateMimeAndExtension,
+} from './file-validation.util';
 
 describe('FileValidationUtil', () => {
   describe('isAllowedExtension', () => {
@@ -60,7 +64,9 @@ describe('FileValidationUtil', () => {
     });
 
     it('should reject disallowed extensions', () => {
-      expect(validateMimeAndExtension('application/octet-stream', 'file.exe')).toBe(false);
+      expect(
+        validateMimeAndExtension('application/octet-stream', 'file.exe'),
+      ).toBe(false);
     });
   });
 });

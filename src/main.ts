@@ -76,6 +76,8 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`Atlas running on port ${port} (${process.env.NODE_ENV || 'development'})`);
+  console.log(
+    `Atlas running on port ${port} (${process.env.NODE_ENV || 'development'})`,
+  );
 }
 bootstrap();

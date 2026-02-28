@@ -33,13 +33,18 @@ export class ShareController {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 
-    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, workspaceId);
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(
+      secret,
+      workspaceId,
+    );
     if (!isOwner) {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 
     if (scopeType !== ScopeType.WORKSPACE && scopeType !== ScopeType.DOCUMENT) {
-      return res.status(HttpStatus.BAD_REQUEST).json({ error: 'Type de scope invalide.' });
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ error: 'Type de scope invalide.' });
     }
 
     const { share, secret: shareSecret } = await this.shareService.createShare(
@@ -67,7 +72,10 @@ export class ShareController {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 
-    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, workspaceId);
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(
+      secret,
+      workspaceId,
+    );
     if (!isOwner) {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
@@ -87,20 +95,25 @@ export class ShareController {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 
-    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, workspaceId);
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(
+      secret,
+      workspaceId,
+    );
     if (!isOwner) {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 
     const result = await this.shareService.regenerate(id);
     if (!result) {
-      return res.status(HttpStatus.NOT_FOUND).json({ error: 'Partage introuvable.' });
+      return res
+        .status(HttpStatus.NOT_FOUND)
+        .json({ error: 'Partage introuvable.' });
     }
 
     return res.status(HttpStatus.OK).json({
       shareId: result.share._id,
       secret: result.secret,
-      message: 'Nouveau secret généré. L\'ancien est invalidé.',
+      message: "Nouveau secret généré. L'ancien est invalidé.",
     });
   }
 
@@ -115,16 +128,23 @@ export class ShareController {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 
-    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, workspaceId);
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(
+      secret,
+      workspaceId,
+    );
     if (!isOwner) {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 
     const revoked = await this.shareService.revoke(id);
     if (!revoked) {
-      return res.status(HttpStatus.NOT_FOUND).json({ error: 'Partage introuvable.' });
+      return res
+        .status(HttpStatus.NOT_FOUND)
+        .json({ error: 'Partage introuvable.' });
     }
 
-    return res.status(HttpStatus.OK).json({ message: 'Secret de partage révoqué.' });
+    return res
+      .status(HttpStatus.OK)
+      .json({ message: 'Secret de partage révoqué.' });
   }
 }

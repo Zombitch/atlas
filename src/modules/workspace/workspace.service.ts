@@ -12,7 +12,9 @@ export class WorkspaceService {
     @InjectModel(Workspace.name) private workspaceModel: Model<Workspace>,
   ) {}
 
-  async create(name: string): Promise<{ workspace: Workspace; ownerSecret: string }> {
+  async create(
+    name: string,
+  ): Promise<{ workspace: Workspace; ownerSecret: string }> {
     const ownerSecret = generateSecret();
     const ownerSecretHash = await hashSecret(ownerSecret);
 

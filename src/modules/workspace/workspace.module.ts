@@ -6,7 +6,9 @@ import { WorkspaceController } from './workspace.controller';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Workspace.name, schema: WorkspaceSchema }]),
+    MongooseModule.forFeature([
+      { name: Workspace.name, schema: WorkspaceSchema },
+    ]),
   ],
   controllers: [WorkspaceController],
   providers: [WorkspaceService],

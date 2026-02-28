@@ -47,7 +47,11 @@ describe('ShareService', () => {
       };
       mockShareModel.create.mockResolvedValue(mockShare);
 
-      const result = await service.createShare(FAKE_WS_ID, ScopeType.WORKSPACE, FAKE_WS_ID);
+      const result = await service.createShare(
+        FAKE_WS_ID,
+        ScopeType.WORKSPACE,
+        FAKE_WS_ID,
+      );
 
       expect(result.share).toBeDefined();
       expect(result.secret).toBeDefined();

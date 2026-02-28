@@ -2,17 +2,72 @@ import * as path from 'path';
 
 const ALLOWED_EXTENSIONS = new Set([
   // Images
-  '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.ico', '.tiff', '.tif',
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.bmp',
+  '.webp',
+  '.svg',
+  '.ico',
+  '.tiff',
+  '.tif',
   // Documents
-  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp',
+  '.pdf',
+  '.doc',
+  '.docx',
+  '.xls',
+  '.xlsx',
+  '.ppt',
+  '.pptx',
+  '.odt',
+  '.ods',
+  '.odp',
   // Text
-  '.txt', '.md', '.csv', '.json', '.xml', '.html', '.htm', '.css', '.js', '.ts',
-  '.py', '.java', '.c', '.cpp', '.h', '.rb', '.go', '.rs', '.sh', '.bat', '.yml', '.yaml',
-  '.log', '.ini', '.cfg', '.conf', '.env', '.sql',
+  '.txt',
+  '.md',
+  '.csv',
+  '.json',
+  '.xml',
+  '.html',
+  '.htm',
+  '.css',
+  '.js',
+  '.ts',
+  '.py',
+  '.java',
+  '.c',
+  '.cpp',
+  '.h',
+  '.rb',
+  '.go',
+  '.rs',
+  '.sh',
+  '.bat',
+  '.yml',
+  '.yaml',
+  '.log',
+  '.ini',
+  '.cfg',
+  '.conf',
+  '.env',
+  '.sql',
   // Archives
-  '.zip', '.tar', '.gz', '.tar.gz', '.tgz', '.rar', '.7z', '.bz2',
+  '.zip',
+  '.tar',
+  '.gz',
+  '.tar.gz',
+  '.tgz',
+  '.rar',
+  '.7z',
+  '.bz2',
   // Other
-  '.mp3', '.mp4', '.wav', '.avi', '.mov', '.mkv',
+  '.mp3',
+  '.mp4',
+  '.wav',
+  '.avi',
+  '.mov',
+  '.mkv',
 ]);
 
 const MIME_TYPE_MAP: Record<string, string[]> = {
@@ -41,14 +96,24 @@ export function isAllowedExtension(filename: string): boolean {
   return ALLOWED_EXTENSIONS.has(ext);
 }
 
-export function getFileCategory(mimeType: string): 'image' | 'pdf' | 'text' | 'binary' {
+export function getFileCategory(
+  mimeType: string,
+): 'image' | 'pdf' | 'text' | 'binary' {
   if (mimeType.startsWith('image/')) return 'image';
   if (mimeType === 'application/pdf') return 'pdf';
-  if (mimeType.startsWith('text/') || mimeType === 'application/json' || mimeType === 'application/xml') return 'text';
+  if (
+    mimeType.startsWith('text/') ||
+    mimeType === 'application/json' ||
+    mimeType === 'application/xml'
+  )
+    return 'text';
   return 'binary';
 }
 
-export function validateMimeAndExtension(mimeType: string, filename: string): boolean {
+export function validateMimeAndExtension(
+  mimeType: string,
+  filename: string,
+): boolean {
   const ext = path.extname(filename).toLowerCase();
   if (!ALLOWED_EXTENSIONS.has(ext)) return false;
   // For known MIME types, validate extension matches

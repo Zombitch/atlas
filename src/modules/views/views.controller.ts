@@ -40,7 +40,10 @@ export class ViewsController {
       });
     }
 
-    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, id);
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(
+      secret,
+      id,
+    );
 
     // If not owner, check if share secret gives workspace access
     if (!isOwner) {
@@ -114,7 +117,10 @@ export class ViewsController {
     }
 
     const workspaceId = doc.workspaceId.toString();
-    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, workspaceId);
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(
+      secret,
+      workspaceId,
+    );
     const documentsInScope = isOwner
       ? await this.documentService.findByWorkspace(workspaceId)
       : [];
@@ -129,7 +135,9 @@ export class ViewsController {
         context.scopeId === workspaceId;
 
       if (hasWorkspaceShareAccess) {
-        documentsInScope.push(...(await this.documentService.findByWorkspace(workspaceId)));
+        documentsInScope.push(
+          ...(await this.documentService.findByWorkspace(workspaceId)),
+        );
       } else {
         documentsInScope.push(doc);
       }
@@ -179,7 +187,10 @@ export class ViewsController {
       });
     }
 
-    const isOwner = await this.accessService.verifyOwnerForWorkspace(secret, workspaceId);
+    const isOwner = await this.accessService.verifyOwnerForWorkspace(
+      secret,
+      workspaceId,
+    );
     if (!isOwner) {
       return res.render('access-denied', {
         title: 'Accès refusé',

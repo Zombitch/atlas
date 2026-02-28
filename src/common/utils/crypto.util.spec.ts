@@ -1,4 +1,9 @@
-import { generateSecret, hashSecret, verifySecret, sanitizeFilename } from './crypto.util';
+import {
+  generateSecret,
+  hashSecret,
+  verifySecret,
+  sanitizeFilename,
+} from './crypto.util';
 
 describe('CryptoUtil', () => {
   describe('generateSecret', () => {

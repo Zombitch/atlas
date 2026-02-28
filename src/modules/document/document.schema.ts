@@ -21,4 +21,5 @@ export class WorkspaceDocument extends MongooseDocument {
   createdAt: Date;
 }
 
-export const WorkspaceDocumentSchema = SchemaFactory.createForClass(WorkspaceDocument);
+export const WorkspaceDocumentSchema =
+  SchemaFactory.createForClass(WorkspaceDocument);

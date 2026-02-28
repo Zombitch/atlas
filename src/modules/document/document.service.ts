@@ -13,7 +13,8 @@ export class DocumentService {
   private readonly uploadDir: string;
 
   constructor(
-    @InjectModel(WorkspaceDocument.name) private documentModel: Model<WorkspaceDocument>,
+    @InjectModel(WorkspaceDocument.name)
+    private documentModel: Model<WorkspaceDocument>,
   ) {
     this.uploadDir = process.env.UPLOAD_DIR || './uploads';
     if (!fs.existsSync(this.uploadDir)) {
@@ -41,7 +42,9 @@ export class DocumentService {
       size: file.size,
     });
 
-    this.logger.log(`Document uploaded: ${doc._id} to workspace ${workspaceId}`);
+    this.logger.log(
+      `Document uploaded: ${doc._id} to workspace ${workspaceId}`,
+    );
     return doc;
   }
 

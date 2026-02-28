@@ -18,12 +18,12 @@
   <div class="doc-preview">
     <% if (category === 'image') { %>
       <div class="image-preview">
-        <img src="/api/download/<%= document._id %>" alt="<%= document.originalName %>" class="preview-image">
+        <img src="/api/download/<%= document._id %>?secret=<%= encodeURIComponent(secret) %>" alt="<%= document.originalName %>" class="preview-image">
       </div>
     <% } else if (category === 'pdf') { %>
       <div class="pdf-preview">
         <object
-          data="/api/download/<%= document._id %>"
+          data="/api/download/<%= document._id %>?secret=<%= encodeURIComponent(secret) %>"
           type="application/pdf"
           class="pdf-viewer">
           <p>Votre navigateur ne supporte pas l'affichage PDF.

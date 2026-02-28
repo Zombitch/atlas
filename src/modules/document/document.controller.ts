@@ -6,13 +6,15 @@ import {
   Patch,
   Param,
   Body,
+  Query,
+  Req,
   Res,
   HttpStatus,
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import * as fs from 'fs';
 import { DocumentService } from './document.service';
 import { AccessService } from '../access/access.service';
@@ -155,10 +157,31 @@ export class DocumentController {
   @Get('download/:id')
   async download(
     @Param('id') id: string,
+    @Query('secret') secretQuery: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
+    const authHeader = req.get('authorization');
+    const bearerSecret =
+      authHeader && authHeader.toLowerCase().startsWith('bearer ')
+        ? authHeader.slice(7).trim()
+        : undefined;
+    const secret = secretQuery || req.get('x-atlas-secret') || bearerSecret;
+
+    if (!secret) {
+      return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
+    }
     const doc = await this.documentService.findById(id);
     if (!doc) {
+      return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
+    }
+
+    const hasAccess = await this.accessService.verifyAccessForDocument(
+      secret,
+      id,
+      doc.workspaceId.toString(),
+    );
+    if (!hasAccess) {
       return res.status(HttpStatus.FORBIDDEN).json({ error: 'Accès refusé.' });
     }
 

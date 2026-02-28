@@ -202,7 +202,7 @@ function initDownloadButtons() {
 
         // Trigger download
         const a = document.createElement('a');
-        a.href = `/api/download/${documentId}`;
+        a.href = `/api/download/${documentId}?secret=${encodeURIComponent(secret)}`;
         a.download = data.filename;
         document.body.appendChild(a);
         a.click();

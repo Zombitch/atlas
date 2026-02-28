@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Workspace } from '../workspace/workspace.schema';
 import { ShareSecret } from '../share/share-secret.schema';
 import { verifySecret } from '../../common/utils/crypto.util';
@@ -70,22 +70,39 @@ export class AccessService {
   }
 
   async verifyAccessForDocument(secret: string, documentId: string, workspaceId: string): Promise<boolean> {
+    if (!secret || typeof secret !== 'string') return false;
+
     // Check owner access
     const isOwner = await this.verifyOwnerForWorkspace(secret, workspaceId);
     if (isOwner) return true;
 
-    // Check share secrets
-    const shares = await this.shareSecretModel.find({
-      revokedAt: null,
-      $or: [
-        { scopeType: 'WORKSPACE', scopeId: workspaceId },
-        { scopeType: 'DOCUMENT', scopeId: documentId },
-      ],
-    }).exec();
+    // Check all active shares in the workspace and validate hash first, then scope.
+    // This avoids false negatives from ObjectId/string query casting differences.
+    let workspaceObjectId: Types.ObjectId;
+    try {
+      workspaceObjectId = new Types.ObjectId(workspaceId);
+    } catch {
+      return false;
+    }
+
+    const shares = await this.shareSecretModel
+      .find({
+        revokedAt: null,
+        workspaceId: workspaceObjectId,
+      })
+      .exec();
 
     for (const share of shares) {
       const isValid = await verifySecret(secret, share.secretHash);
-      if (isValid) return true;
+      if (!isValid) continue;
+
+      const scopeId = share.scopeId.toString();
+      if (share.scopeType === 'WORKSPACE' && scopeId === workspaceId) {
+        return true;
+      }
+      if (share.scopeType === 'DOCUMENT' && scopeId === documentId) {
+        return true;
+      }
     }
 
     return false;

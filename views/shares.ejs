@@ -1,0 +1,35 @@
+<%- include('partials/header') %>
+
+<div class="shares-container">
+  <div class="shares-header">
+    <h1>Gestion des partages</h1>
+    <p class="subtitle"><%= workspace ? workspace.name : 'Espace de travail' %></p>
+    <a href="/workspace/<%= workspaceId %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline">
+      Retour à l'espace
+    </a>
+  </div>
+
+  <div id="shares-list" class="shares-list"
+    data-workspace-id="<%= workspaceId %>"
+    data-secret="<%= secret %>">
+    <p class="text-muted">Chargement des partages...</p>
+  </div>
+</div>
+
+<!-- Regenerate modal -->
+<div id="regenerate-modal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Nouveau secret de partage</h2>
+    <div class="alert alert-warning">
+      L'ancien secret a été invalidé. Copiez le nouveau secret ci-dessous.
+    </div>
+    <div class="secret-display">
+      <code id="regenerate-secret-display"></code>
+      <button type="button" class="btn btn-primary" id="copy-regenerate-secret">Copier</button>
+    </div>
+    <p class="text-muted" id="regenerate-copy-feedback"></p>
+    <button type="button" class="btn btn-secondary btn-block" id="close-regenerate-modal">Fermer</button>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,59 @@
+<%- include('partials/header') %>
+
+<div class="document-view-container">
+  <div class="doc-view-header">
+    <h1><%= document.originalName %></h1>
+    <div class="doc-view-actions">
+      <button class="btn btn-primary download-btn"
+        data-document-id="<%= document._id %>"
+        data-secret="<%= secret %>">
+        Télécharger
+      </button>
+      <a href="/workspace/<%= document.workspaceId %>?secret=<%= encodeURIComponent(secret) %>" class="btn btn-outline">
+        Retour
+      </a>
+    </div>
+  </div>
+
+  <div class="doc-preview">
+    <% if (category === 'image') { %>
+      <div class="image-preview">
+        <img src="/api/download/<%= document._id %>" alt="<%= document.originalName %>" class="preview-image">
+      </div>
+    <% } else if (category === 'pdf') { %>
+      <div class="pdf-preview">
+        <object
+          data="/api/download/<%= document._id %>"
+          type="application/pdf"
+          class="pdf-viewer">
+          <p>Votre navigateur ne supporte pas l'affichage PDF.
+            <button class="btn btn-primary download-btn"
+              data-document-id="<%= document._id %>"
+              data-secret="<%= secret %>">
+              Télécharger le PDF
+            </button>
+          </p>
+        </object>
+      </div>
+    <% } else if (category === 'text' && textContent) { %>
+      <div class="text-preview">
+        <pre class="text-content"><%= textContent %></pre>
+      </div>
+    <% } else { %>
+      <div class="binary-preview">
+        <div class="binary-info">
+          <span class="icon large">&#128193;</span>
+          <p>Ce format ne peut pas être prévisualisé.</p>
+          <p class="text-muted"><%= document.mimeType %> &mdash; <%= (document.size / 1024).toFixed(1) %> Ko</p>
+          <button class="btn btn-primary download-btn"
+            data-document-id="<%= document._id %>"
+            data-secret="<%= secret %>">
+            Télécharger
+          </button>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

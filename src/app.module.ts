@@ -9,13 +9,12 @@ import { AccessModule } from './modules/access/access.module';
 import { ViewsModule } from './modules/views/views.module';
 
 const env = process.env.NODE_ENV || 'development';
-const collectionPrefix = env === 'production' ? 'atlas_file_prod' : 'atlas_file_dev';
+const collectionPrefix = env === 'production' ? 'atlas_prod' : 'atlas_dev';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/atlas', {
+    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/atlas_dev', {
       connectionFactory: (connection) => {
-        connection.set('collection', collectionPrefix);
         return connection;
       },
     }),

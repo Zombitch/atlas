@@ -1,0 +1,78 @@
+- hosts: localhost
+  become: yes
+  tasks:
+
+  - name: Remove a container
+    docker_container:
+      name: atlas
+      keep_volumes: true
+      state: absent
+
+  - name: Create atlas data folder
+    file:
+      path: /data/atlas/docker
+      state: directory
+
+  - name: Create atlas volume
+    community.docker.docker_volume:
+      name: atlas_data
+
+  - name: Delete Dockerfile
+    file:
+      path: /data/atlas/docker/Dockerfile
+      state: absent
+
+  - name: Write docker file
+    ansible.builtin.blockinfile:
+      path: /data/atlas/docker/Dockerfile
+      create: true
+      mode: a+rwx
+      block: |
+        FROM node:22.14-alpine3.21
+        RUN apk update
+        RUN apk add wget
+        RUN mkdir -p /opt/atlas
+        WORKDIR /opt/atlas/
+        RUN wget https://github.com/Zombitch/atlas/archive/refs/heads/main.zip
+        RUN unzip main.zip && rm -f main.zip
+        WORKDIR /opt/atlas/atlas-main
+        RUN echo "NODE_ENV=production" >> .env
+        RUN echo "PORT=4000" >> .env
+        RUN echo "MONGODB_URI={{ mongoURI }}" >> .env
+        RUN echo "MAX_FILE_SIZE=52428800" >> .env
+        RUN echo "UPLOAD_DIR=./uploads" >> .env
+        RUN echo "SESSION_SECRET={{ secret }}" >> .env
+        RUN echo "RATE_LIMIT_TTL=60000" >> .env
+        RUN echo "RATE_LIMIT_MAX=30" >> .env
+        RUN npm i
+        EXPOSE 4000
+        CMD ["npm","start"]
+      state: present
+
+  - name: Delete previous image
+    community.docker.docker_image:
+      name: atlas
+      state: absent
+      force_absent: true
+
+  - name: Create the image
+    community.docker.docker_image:
+      name: atlas
+      source: build
+      build:
+        path: /data/atlas/docker
+
+  - name: Run container
+    community.docker.docker_container:
+      container_default_behavior: no_defaults
+      name: atlas
+      image: atlas
+      hostname: "{{ host }}"
+      state: started
+      restart_policy: always
+      exposed_ports :
+        - 4000
+      volumes:
+        - atlas_data:/opt/atlas/atlas-main
+      networks:
+        - name: "{{ network }}"

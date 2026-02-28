@@ -39,8 +39,24 @@ function loadEnvFile(): void {
   }
 }
 
+function loadPackageVersion(): string {
+  const packageJsonPath = join(process.cwd(), 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return 'dev';
+  }
+
+  try {
+    const packageJsonContent = readFileSync(packageJsonPath, 'utf8');
+    const packageJson = JSON.parse(packageJsonContent) as { version?: string };
+    return packageJson.version ?? 'dev';
+  } catch {
+    return 'dev';
+  }
+}
+
 async function bootstrap() {
   loadEnvFile();
+  const assetVersion = loadPackageVersion();
   const { AppModule } = await import('./app.module');
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -67,6 +83,7 @@ async function bootstrap() {
   // EJS setup
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('ejs');
+  app.getHttpAdapter().getInstance().locals.assetVersion = assetVersion;
 
   // Static files
   app.useStaticAssets(join(__dirname, '..', 'public'));

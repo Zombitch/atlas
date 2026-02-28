@@ -45,8 +45,9 @@
         RUN echo "RATE_LIMIT_TTL=60000" >> .env
         RUN echo "RATE_LIMIT_MAX=30" >> .env
         RUN npm i
+        RUN npm run build
         EXPOSE 4000
-        CMD ["npm","start"]
+        CMD ["npm","start:prod"]
       state: present
 
   - name: Delete previous image

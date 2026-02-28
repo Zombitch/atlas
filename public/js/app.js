@@ -284,11 +284,13 @@ async function createShare(workspaceId, scopeType, scopeId, secret) {
     // Show share modal
     const modal = document.getElementById('share-modal');
     const secretDisplay = document.getElementById('share-secret-display');
-    secretDisplay.textContent = data.secret;
+    const valueToShare = getShareValueToDisplay(scopeType, scopeId, data.secret);
+    updateShareModalContent(scopeType);
+    secretDisplay.textContent = valueToShare;
     modal.classList.remove('hidden');
 
     document.getElementById('copy-share-secret').onclick = () => {
-      copyToClipboard(data.secret, 'share-copy-feedback');
+      copyToClipboard(valueToShare, 'share-copy-feedback');
     };
 
     document.getElementById('close-share-modal').onclick = () => {
@@ -346,7 +348,9 @@ async function loadShares(workspaceId, secret) {
               <button class="btn btn-sm btn-secondary regenerate-share-btn"
                 data-share-id="${share._id}"
                 data-workspace-id="${workspaceId}"
-                data-secret="${secret}">
+                data-secret="${secret}"
+                data-scope-type="${share.scopeType}"
+                data-scope-id="${share.scopeId}">
                 Régénérer
               </button>
               <button class="btn btn-sm btn-danger revoke-share-btn"
@@ -378,6 +382,8 @@ async function regenerateShare(btn) {
   const shareId = btn.dataset.shareId;
   const workspaceId = btn.dataset.workspaceId;
   const secret = btn.dataset.secret;
+  const scopeType = btn.dataset.scopeType;
+  const scopeId = btn.dataset.scopeId;
 
   try {
     const res = await fetch(`/api/shares/${shareId}/regenerate`, {
@@ -394,11 +400,13 @@ async function regenerateShare(btn) {
 
     // Show regenerate modal
     const modal = document.getElementById('regenerate-modal');
-    document.getElementById('regenerate-secret-display').textContent = data.secret;
+    const valueToShare = getShareValueToDisplay(scopeType, scopeId, data.secret);
+    updateRegenerateModalContent(scopeType);
+    document.getElementById('regenerate-secret-display').textContent = valueToShare;
     modal.classList.remove('hidden');
 
     document.getElementById('copy-regenerate-secret').onclick = () => {
-      copyToClipboard(data.secret, 'regenerate-copy-feedback');
+      copyToClipboard(valueToShare, 'regenerate-copy-feedback');
     };
 
     document.getElementById('close-regenerate-modal').onclick = () => {
@@ -483,4 +491,42 @@ function copyToClipboard(text, feedbackId) {
       setTimeout(() => { feedback.textContent = ''; }, 3000);
     }
   });
+}
+
+function getShareValueToDisplay(scopeType, scopeId, shareSecret) {
+  if (scopeType === 'DOCUMENT') {
+    return `${window.location.origin}/doc/${encodeURIComponent(scopeId)}?secret=${encodeURIComponent(shareSecret)}`;
+  }
+
+  return shareSecret;
+}
+
+function updateShareModalContent(scopeType) {
+  const title = document.getElementById('share-modal-title');
+  const description = document.getElementById('share-modal-description');
+  if (!title || !description) return;
+
+  if (scopeType === 'DOCUMENT') {
+    title.textContent = 'Lien de partage';
+    description.textContent = 'Copiez ce lien et transmettez-le pour voir ou télécharger le document.';
+    return;
+  }
+
+  title.textContent = 'Secret de partage';
+  description.textContent = 'Copiez ce secret et transmettez-le à la personne concernée.';
+}
+
+function updateRegenerateModalContent(scopeType) {
+  const title = document.getElementById('regenerate-modal-title');
+  const description = document.getElementById('regenerate-modal-description');
+  if (!title || !description) return;
+
+  if (scopeType === 'DOCUMENT') {
+    title.textContent = 'Nouveau lien de partage';
+    description.textContent = 'L’ancien accès a été invalidé. Copiez ce nouveau lien.';
+    return;
+  }
+
+  title.textContent = 'Nouveau secret de partage';
+  description.textContent = 'L\'ancien secret a été invalidé. Copiez le nouveau secret ci-dessous.';
 }

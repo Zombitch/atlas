@@ -36,6 +36,7 @@
         RUN wget https://github.com/Zombitch/atlas/archive/refs/heads/main.zip
         RUN unzip main.zip && rm -f main.zip
         WORKDIR /opt/atlas/atlas-main
+        RUN mkdir -p /opt/atlas/atlas-main/uploads
         RUN echo "NODE_ENV=production" >> .env
         RUN echo "PORT=4000" >> .env
         RUN echo "MONGODB_URI={{ mongoURI }}" >> .env
@@ -74,6 +75,6 @@
       exposed_ports :
         - 4000
       volumes:
-        - atlas_data:/opt/atlas/atlas-main
+        - atlas_data:/opt/atlas/atlas-main/uploads
       networks:
         - name: "{{ network }}"

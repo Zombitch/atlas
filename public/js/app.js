@@ -187,11 +187,13 @@ function uploadFiles(files, form) {
   const formData = new FormData();
   const workspaceId = form.querySelector('[name="workspaceId"]').value;
   const secret = form.querySelector('[name="secret"]').value;
+  const currentPath = form.querySelector('[name="currentPath"]')?.value || '';
 
   files.forEach((file) => {
     const relativePath = file.webkitRelativePath || file.name;
+    const fullPath = currentPath ? currentPath + '/' + relativePath : relativePath;
     formData.append('files', file);
-    formData.append('relativePaths', relativePath);
+    formData.append('relativePaths', fullPath);
   });
   formData.append('workspaceId', workspaceId);
   formData.append('secret', secret);

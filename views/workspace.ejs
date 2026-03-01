@@ -27,6 +27,7 @@
     <form id="upload-form" enctype="multipart/form-data">
       <input type="hidden" name="workspaceId" value="<%= workspace._id %>">
       <input type="hidden" name="secret" value="<%= secret %>">
+      <input type="hidden" name="currentPath" value="<%= currentPath || '' %>">
       <div class="upload-area" id="drop-zone">
         <span class="upload-icon">&#128228;</span>
         <p>Glissez vos fichiers ici, sélectionnez des fichiers ou un dossier</p>
